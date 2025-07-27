@@ -1,0 +1,25 @@
+chapter: 9
+map: 2
+selected_nodes: [A, E, D]
+repair_mode: 1
+
+node_defaults:
+  enemy_rules:
+    - [SAP != 1, detour]
+  formation: 2
+
+  night: False
+  SL_when_detour_fails: True
+
+  proceed: True
+  proceed_stop: [2, 2, 2, 2, 2, 2]
+
+node_args:
+  E:
+    enemy_rules:
+      - [SAP != 1, retreat]
+    proceed: False
+  D:
+    enemy_rules:
+      - [SAP != 1, retreat]
+    proceed: False

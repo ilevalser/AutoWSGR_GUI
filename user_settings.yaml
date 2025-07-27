@@ -1,0 +1,45 @@
+debug: False
+log_level: INFO
+check_update: False
+delay: 1.5
+dock_full_destroy: True
+destroy_ship_work_mode: 2
+destroy_ship_types:
+  - 航母
+  - 轻母
+  - 装母
+  - 导驱
+
+bathroom_feature_count: 3
+bathroom_count: 8
+
+emulator_type: 蓝叠
+emulator_name: ''
+daily_automation:
+  auto_expedition: True
+  auto_gain_bonus: True
+  auto_bath_repair: True
+  auto_set_support: True
+  auto_battle: True
+  battle_type: 困难巡洋
+  auto_exercise: True
+  exercise_fleet_id: 2
+  auto_normal_fight: True
+  normal_fight_tasks:
+    - [9-3AD, 2, 10]
+  quick_repair_limit:
+  stop_max_ship: True
+  stop_max_loot: True
+
+decisive_battle:
+  chapter: 6
+  level1: ["U-1206", "U-47", "鲃鱼", "U-96", "U-1405", "伊-25"]
+  level2: ["大青花鱼", "M-296", "U-505", "射水鱼", "U-81"]
+  flagship_priority: ["U-1405", "U-47", "U-1206"]
+  repair_level: 2
+  full_destroy: True
+  useful_skill: True
+  useful_skill_strict: True
+
+ship_name_file:
+

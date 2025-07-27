@@ -1,0 +1,9 @@
+chapter: 9
+map: 3
+selected_nodes: [A]
+
+node_args:
+  A:
+    formation: 4
+    night: False
+    proceed: False

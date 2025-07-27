@@ -1,0 +1,13 @@
+#E9 夜战
+chapter: H
+map: 3
+selected_nodes: [A, B]
+node_defaults:
+  night: True
+  formation: 4
+
+node_args:
+  A:
+    proceed: False
+  B:
+    proceed: False
