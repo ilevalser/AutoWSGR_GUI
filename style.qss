@@ -411,6 +411,7 @@ QPushButton#SpinBoxDecrButton, QPushButton#SpinBoxIncrButton {
 /* ================================================================== */
 /* ========================= 4. 特定页面/组件样式 ====================== */
 /* ================================================================== */
+/* 4.0 标题栏提示符 */
 QLabel#StatusLabel {
     color: #E0E0E0;
     font-size: 14px;
@@ -418,9 +419,14 @@ QLabel#StatusLabel {
     font-weight: bold;
 }
 
-/* 4.1 模拟器地址输入检查 */
+/* 4.1 设置页 */
 QLineEdit[state="invalid"] {
     border: 1px solid red;
+}
+
+QPushButton#plans_button {
+    min-width: 120px;
+    min-height: 26px;
 }
 
 /* 4.2 “启动/中止”按钮 */

@@ -2,8 +2,6 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
-NORMAL_PLANS_DIR = BASE_DIR / 'plans/normal_fight/'
-EVENT_PLANS_DIR = BASE_DIR / 'plans/event/'
 SCRIPT_DIR = BASE_DIR / 'scripts/'
 ICONS_DIR = BASE_DIR / 'resources/icons/'
 SHIP_NAME_FILE = BASE_DIR / 'resources/ship_name.yaml'

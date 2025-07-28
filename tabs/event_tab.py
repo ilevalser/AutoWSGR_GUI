@@ -2,8 +2,8 @@ import os
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit
 )
-from PySide6.QtCore import Qt, Signal
-
+from PySide6.QtCore import Qt, Signal, Slot
+from pathlib import Path
 from tabs.components.check_box import CustomCheckBox
 from tabs.components.spin_box import CustomSpinBox
 from tabs.components.combo_box import CustomComboBox
@@ -11,19 +11,20 @@ from tabs.components.base_task_tab import BaseTaskTab
 from utils.ui_utils import create_form_layout, create_group
 from utils.config_utils import update_config_value, save_config, validate_and_save_line_edit
 
-from constants import EVENT_PLANS_DIR
-
 class EventTab(BaseTaskTab):
     """活动挂机选项卡"""
 
     log_message_signal = Signal(str)
 
-    def __init__(self, configs_data, configs_path, yaml_manager, parent=None):
+    def __init__(self, settings_data, settings_path, configs_data, configs_path, yaml_manager, parent=None):
         """初始化活动选项卡"""
         super().__init__(parent)
+        self.settings_data = settings_data
+        self.settings_path = settings_path
         self.configs_data = configs_data
         self.configs_path = configs_path
         self.yaml_manager = yaml_manager
+        self.event_plans_dir = None
 
         # 默认参数和范围
         self.BATTLE_COUNT_RANGE = (1, 999)
@@ -149,13 +150,13 @@ class EventTab(BaseTaskTab):
         if saved_folder and self.event_folder_combo.findText(saved_folder) != -1:
             self.event_folder_combo.setCurrentText(saved_folder)
         
-        current_folder = self.event_folder_combo.currentText()
-        self._populate_event_tasks_combo(current_folder)
+        self._on_event_folder_changed(self.event_folder_combo.currentText())
 
         if saved_plan and self.event_task_combo.findText(saved_plan) != -1:
             self.event_task_combo.setCurrentText(saved_plan)
         elif self.event_task_combo.count() > 0:
             self.event_task_combo.setCurrentIndex(0)
+            self._handle_value_change("event_automation.plan_name", self.event_task_combo.currentText())
 
         self.fleet_id_spin.setValue(event.get('fleet_id', 1))
         self.battle_count_input.setText(str(event.get('battle_count', self.BATTLE_COUNT_DEFAULT_SAVE)))
@@ -175,19 +176,23 @@ class EventTab(BaseTaskTab):
 
     def _populate_event_folders_combo(self):
         """从 'plans/event' 目录加载活动文件夹名称到下拉框中"""
+        plan_root = self.settings_data.get('plan_root', '')
+        self.event_plans_dir = Path(plan_root) / 'event' if plan_root else None
+        
         self.event_folder_combo.clear()
-        if not os.path.isdir(EVENT_PLANS_DIR):
-            self.event_folder_combo.addItem("未找到活动文件夹")
+        self.event_folder_combo.setEnabled(True)
+
+        if not self.event_plans_dir or not self.event_plans_dir.is_dir():
+            self.event_folder_combo.addItem("方案路径无效或未设置")
             self.event_folder_combo.setEnabled(False)
             return
         try:
-            folders = sorted([d for d in os.listdir(EVENT_PLANS_DIR) if os.path.isdir(os.path.join(EVENT_PLANS_DIR, d))], reverse=True)
+            folders = sorted([d.name for d in self.event_plans_dir.iterdir() if d.is_dir()], reverse=True)
             if not folders:
                 self.event_folder_combo.addItem("没有可用的活动")
                 self.event_folder_combo.setEnabled(False)
             else:
                 self.event_folder_combo.addItems(folders)
-                self.event_folder_combo.setEnabled(True)
         except Exception as e:
             self.log_message_signal.emit(f"错误: 读取活动文件夹时出错: {e}")
 
@@ -198,7 +203,7 @@ class EventTab(BaseTaskTab):
             self.event_task_combo.setEnabled(False)
             return
 
-        task_dir = os.path.join(EVENT_PLANS_DIR, folder_name)
+        task_dir = os.path.join(self.event_plans_dir, folder_name)
         if not os.path.isdir(task_dir):
             self.event_task_combo.addItem("无效的文件夹")
             self.event_task_combo.setEnabled(False)
@@ -220,16 +225,13 @@ class EventTab(BaseTaskTab):
 
     def _on_event_folder_changed(self, folder_name):
         """当活动文件夹选择变化时，保存新文件夹并级联更新和保存任务"""
-        if not folder_name or "未找到" in folder_name or "没有可用" in folder_name:
-            self.event_task_combo.clear()
-            self.event_task_combo.setEnabled(False)
-            self._handle_value_change("event_automation.plan_name", None)
-            return
-
-        self._handle_value_change("event_automation.event_folder", folder_name)
         self._populate_event_tasks_combo(folder_name)
+        
+        # 只有在有效文件夹名时才保存
+        if folder_name and "未找到" not in folder_name and "没有可用" not in folder_name and "无效" not in folder_name:
+            self._handle_value_change("event_automation.event_folder", folder_name)
 
-        if self.event_task_combo.count() > 0:
+        if self.event_task_combo.count() > 0 and self.event_task_combo.isEnabled():
             self.event_task_combo.blockSignals(True)
             self.event_task_combo.setCurrentIndex(0)
             self.event_task_combo.blockSignals(False)
@@ -237,6 +239,13 @@ class EventTab(BaseTaskTab):
             self._handle_value_change("event_automation.plan_name", new_plan_name)
         else:
             self._handle_value_change("event_automation.plan_name", None)
+
+    @Slot()
+    def refresh_task_plans(self):
+        """刷新活动文件夹和任务计划的下拉列表"""
+        self._populate_event_folders_combo()
+        current_folder = self.event_folder_combo.currentText()
+        self._on_event_folder_changed(current_folder)
 
     def get_script_args(self):
         """从UI控件收集并返回要传递给脚本的参数列表"""

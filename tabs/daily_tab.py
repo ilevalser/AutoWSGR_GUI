@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QApplication,
     QTableWidgetItem, QHeaderView, QPushButton, QLabel, QSizePolicy, QLineEdit
 )
-from PySide6.QtCore import Qt, Signal, QEvent
+from PySide6.QtCore import Qt, Signal, QEvent, Slot
 from PySide6.QtGui import QIntValidator
 from ruamel.yaml.comments import CommentedSeq
 
@@ -13,8 +13,7 @@ from tabs.components.combo_box import CustomComboBox
 from tabs.components.base_task_tab import BaseTaskTab
 from utils.ui_utils import create_form_layout, create_group, ConfirmButtonManager
 from utils.config_utils import update_config_value, save_config
-from constants import NORMAL_PLANS_DIR, BATTLE_TYPES
-
+from constants import BATTLE_TYPES
 
 class DailyTab(BaseTaskTab):
     """日常挂机设置选项卡"""
@@ -25,10 +24,12 @@ class DailyTab(BaseTaskTab):
         """初始化 DailyTab 选项卡"""
         super().__init__(parent)
         self.settings_data = settings_data
-        self.yaml_manager = yaml_manager
         self.settings_path = settings_path
+        self.yaml_manager = yaml_manager
+        self.normal_plans_dir = self.settings_data.get('plan_root') + '/normal_fight'
 
         # 状态变量
+        self.normal_plans_dir = None
         self.currently_selected_row = -1
         self.edit_mode = None
         self.editing_row_index = -1
@@ -259,17 +260,26 @@ class DailyTab(BaseTaskTab):
 
     def _load_task_files_to_combo(self):
         """加载任务文件夹下的任务文件到下拉菜单"""
-        if not os.path.isdir(NORMAL_PLANS_DIR):
-            self.task_file_combo.addItem("未找到任务文件夹")
+        plan_root = self.settings_data.get('plan_root')
+        if plan_root:
+            self.normal_plans_dir = os.path.join(plan_root, 'normal_fight')
+        else:
+            self.normal_plans_dir = None
+        
+        self.task_file_combo.clear() # 确保每次加载前都清空
+        self.task_file_combo.setEnabled(True) # 默认启用
+
+        if not self.normal_plans_dir or not os.path.isdir(self.normal_plans_dir):
+            self.task_file_combo.addItem("方案路径无效或未设置")
             self.task_file_combo.setEnabled(False)
             return
         try:
-            files = [f for f in os.listdir(NORMAL_PLANS_DIR) if f.endswith(('.yml', '.yaml'))]
+            files = [f for f in os.listdir(self.normal_plans_dir) if f.endswith(('.yml', '.yaml'))]
             if not files:
-                self.task_file_combo.addItem("未找到任务文件")
+                self.task_file_combo.addItem("未找到日常作战方案")
                 self.task_file_combo.setEnabled(False)
             else:
-                plan_names = [os.path.splitext(f)[0] for f in files]
+                plan_names = sorted([os.path.splitext(f)[0] for f in files])
                 self.task_file_combo.addItems(plan_names)
         except Exception as e:
             self.log_message_signal.emit(f"错误: 读取任务文件时出错: {e}")
@@ -293,7 +303,7 @@ class DailyTab(BaseTaskTab):
         quick_repair_limit_val = daily.get('quick_repair_limit')
         display_text = '0' if quick_repair_limit_val is None else str(quick_repair_limit_val)
         self.quick_repair_limit_input.setText(display_text)
-        
+        self._load_task_files_to_combo()
         self.populate_tasks_table(daily.get('normal_fight_tasks', []))
         self._update_task_buttons_state()
 
@@ -345,6 +355,41 @@ class DailyTab(BaseTaskTab):
                 if clicked_widget != self.remove_task_btn:
                     self.remove_button_manager.reset_state()
         return super().eventFilter(watched, event)
+
+    @Slot()
+    def refresh_task_plans(self):
+        """刷新自定义任务下拉列表的内容，并校验现有任务列表的有效性"""
+        self._load_task_files_to_combo()
+
+        # 校验现有任务列表
+        available_plans = set()
+        if self.normal_plans_dir and os.path.isdir(self.normal_plans_dir):
+            available_plans = {os.path.splitext(f)[0] for f in os.listdir(self.normal_plans_dir) if f.endswith(('.yml', '.yaml'))}
+
+        daily_automation = self.settings_data.get('daily_automation', {})
+        current_tasks = daily_automation.get('normal_fight_tasks', [])
+
+        if not current_tasks:
+            return
+
+        # 筛选出有效的任务
+        validated_tasks = []
+        removed_task_names = []
+        for task in current_tasks:
+            if task and task[0] in available_plans:
+                validated_tasks.append(task)
+            elif task:
+                removed_task_names.append(str(task[0]))
+        
+        # 如果有任务被移除，则更新配置和UI
+        if removed_task_names:
+            new_task_list = CommentedSeq(validated_tasks)
+            for task in new_task_list:
+                task.fa.set_flow_style()
+
+            self._handle_value_change('daily_automation.normal_fight_tasks', new_task_list)
+            self.populate_tasks_table(new_task_list)
+            self._update_task_buttons_state()
 
     # =========================
     # 任务列表核心交互逻辑

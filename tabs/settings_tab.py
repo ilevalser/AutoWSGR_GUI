@@ -1,10 +1,11 @@
 from PySide6.QtWidgets import (
     QWidget, QGridLayout, QLineEdit, QPushButton, QLabel,
-    QHBoxLayout, QVBoxLayout
+    QHBoxLayout, QVBoxLayout, QFileDialog
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from ruamel.yaml.comments import CommentedSeq
 import re
+from pathlib import Path
 
 from tabs.components.check_box import CustomCheckBox
 from tabs.components.spin_box import CustomSpinBox
@@ -21,6 +22,7 @@ from constants import (
 
 class SettingsTab(QWidget):
     """全局设置选项卡"""
+    plan_root_changed = Signal()
 
     def __init__(self, settings_data, settings_path, yaml_manager, parent=None):
         super().__init__(parent)
@@ -62,6 +64,10 @@ class SettingsTab(QWidget):
         self.emulator_name_label = QLabel("MuMu模拟器监听地址:")
         self.emulator_name_input = QLineEdit()
         self.emulator_name_input.setPlaceholderText("127.0.0.1:7555")
+        self.plan_root_input = QLineEdit()
+        self.plan_root_input.setReadOnly(True)
+        self.plan_root_button = QPushButton("选择文件夹")
+        self.plan_root_button.setObjectName("plans_button")
         self.dock_full_destroy_cb = CustomCheckBox("船坞满时解装")
         self.destroy_ship_work_mode_label = QLabel("解装模式:")
         self.destroy_ship_work_mode_combo = CustomComboBox()
@@ -99,6 +105,11 @@ class SettingsTab(QWidget):
         right_layout.setContentsMargins(5, 5, 5, 5)
         right_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        plan_settings_layout = QHBoxLayout()
+        plan_settings_layout.setContentsMargins(0, 0, 0, 0)
+        plan_settings_layout.addWidget(self.plan_root_input, 1)
+        plan_settings_layout.addWidget(self.plan_root_button)
+        right_layout.addWidget(create_group("方案路径设置", plan_settings_layout, (15, 15, 15, 10)))
         destroy_content = create_form_layout([
             (self.dock_full_destroy_cb, "船坞满后自动根据下方黑/白名单设置进行解装"),
             ((self.destroy_ship_work_mode_label, self.destroy_ship_work_mode_combo),
@@ -158,6 +169,7 @@ class SettingsTab(QWidget):
         self.bathroom_count_spin.valueChanged.connect(lambda v: self._handle_value_change('bathroom_count', v))
         self.emulator_type_input.textChanged.connect(self._on_emulator_type_changed)
         self.emulator_name_input.editingFinished.connect(self._validate_and_save_emulator_name)
+        self.plan_root_button.clicked.connect(self._on_select_plan_root_clicked)
         self.dock_full_destroy_cb.toggled.connect(lambda v: self._handle_value_change('dock_full_destroy', v))
         self.destroy_ship_work_mode_combo.currentIndexChanged.connect(self._on_destroy_mode_changed)
         self.all_ships_button.clicked.connect(self._on_all_ships_clicked)
@@ -180,6 +192,9 @@ class SettingsTab(QWidget):
         emulator_name_text = self.settings_data.get('emulator_name', '')
         self.emulator_name_input.setText(emulator_name_text or "") # 确保 None 值不会错误地传递
         self._validate_and_save_emulator_name()  # 确保初始状态正确
+        plan_root_path = self.settings_data.get('plan_root', '')
+        self.plan_root_input.setText(plan_root_path or "")
+        self._validate_and_save_plan_root(plan_root_path, initial_load=True)
         self.dock_full_destroy_cb.setChecked(self.settings_data.get('dock_full_destroy', False))
         work_mode_val = self.settings_data.get('destroy_ship_work_mode', 0)
         mode_index = next(
@@ -243,6 +258,42 @@ class SettingsTab(QWidget):
             yaml_manager=self.yaml_manager,
             validation_func=lambda text: not text or bool(re.match(pattern, text))
         )
+
+    def _on_select_plan_root_clicked(self):
+        """打开文件夹对话框以选择方案根目录"""
+        current_path = self.plan_root_input.text()
+        directory = QFileDialog.getExistingDirectory(self, "选择方案根文件夹", current_path)
+        if directory:
+            self.plan_root_input.setText(directory)
+            self._validate_and_save_plan_root(directory)
+    
+    def _validate_and_save_plan_root(self, directory, initial_load=False):
+        """验证方案路径的正确性，更新UI，如果有效则保存并发出信号。"""
+        is_valid = False
+        if directory:
+            p = Path(directory)
+            if p.is_dir() and p.name == 'plans':
+                if (p / 'normal_fight').is_dir() and (p / 'event').is_dir():
+                    is_valid = True
+        
+        if is_valid:
+            self.plan_root_input.setProperty("state", "valid")
+            if not initial_load:
+                self._handle_value_change('plan_root', directory)
+                self.plan_root_changed.emit() # 发出信号通知其他Tab
+        else:
+            # 只有在有输入时才标记为无效，空路径不标记
+            state = "invalid" if directory else "neutral"
+            self.plan_root_input.setProperty("state", state)
+            # 如果是用户主动选择的无效路径，则不写入文件
+            # 但允许配置文件中初始加载一个空路径
+            if not initial_load and not directory:
+                 self._handle_value_change('plan_root', '')
+
+
+        # 刷新输入框样式
+        self.plan_root_input.style().unpolish(self.plan_root_input)
+        self.plan_root_input.style().polish(self.plan_root_input)
 
     def _on_destroy_mode_changed(self, index):
         """处理解装模式下拉菜单的变化"""

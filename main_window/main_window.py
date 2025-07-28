@@ -110,7 +110,7 @@ class MainWindow(QMainWindow):
         self.task_tabs["日常"] = self.daily_tab
         self.decisive_battle_tab = DecisiveBattleTab(self.settings_data, SETTINGS_FILE, self.ui_configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
         self.task_tabs["决战"] = self.decisive_battle_tab
-        self.event_tab = EventTab(self.ui_configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
+        self.event_tab = EventTab(self.settings_data, SETTINGS_FILE, self.ui_configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
         self.task_tabs["活动"] = self.event_tab
 
         # 填充内容
@@ -143,6 +143,10 @@ class MainWindow(QMainWindow):
             tab_instance.task_finished.connect(self._on_any_task_finished)
             tab_instance.log_message_signal.connect(self.log_tab.append_log_message)
 
+        # 连接刷新下拉框
+        self.settings_tab.plan_root_changed.connect(self.daily_tab.refresh_task_plans)
+        self.settings_tab.plan_root_changed.connect(self.event_tab.refresh_task_plans)
+        
         # 启用追踪
         QApplication.instance().installEventFilter(self)
 

@@ -27,3 +27,6 @@ env.bak/
 build/
 dist/
 *.egg-info/
+
+# Plans
+plans/
