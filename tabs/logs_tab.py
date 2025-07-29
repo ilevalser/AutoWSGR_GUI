@@ -104,6 +104,14 @@ class LogTab(QWidget):
         self.auto_scroll_checkbox.blockSignals(False)
         self.auto_scroll_checkbox.update_icon()
 
+    def set_quick_actions_enabled(self, enabled: bool, tooltip: str = ""):
+        """
+        由主窗口调用，用于在特殊状态（如更新时）统一控制按钮的可用性。
+        """
+        self.quick_start_stop_button.setEnabled(enabled)
+        self.quick_start_stop_button.setToolTip(tooltip)
+        self.task_selector_combo.setEnabled(enabled)
+
     @Slot(bool)
     def _on_auto_scroll_toggled(self, checked):
         """更新自动滚动状态"""

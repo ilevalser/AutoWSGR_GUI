@@ -1,7 +1,5 @@
-# GUI中保存的日志设置
+check_update_gui: False
 auto_scroll: True
-
-# GUI中保存的自定义舰船名称
 custom_ss_names:
   - "决战1"
   - "决战10"
@@ -14,8 +12,6 @@ custom_ss_names:
   - "决战8"
   - "决战9"
 sortie_times: 1
-
-# GUI中保存的活动设置
 event_automation:
   event_folder: '20250710'
   plan_name: E9A夜战

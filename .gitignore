@@ -19,7 +19,7 @@ env.bak/
 *.swp
 
 # Logs and Data
-*.log
+log/
 *.sqlite
 *.db
 

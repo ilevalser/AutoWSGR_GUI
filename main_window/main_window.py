@@ -1,3 +1,4 @@
+import sys
 from PySide6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLabel, QFrame, 
                                QStackedWidget, QSystemTrayIcon, QMenu, QApplication)
 from PySide6.QtCore import Qt, QPoint, QEvent, QTimer, QObject, QProcess, Slot
@@ -59,6 +60,11 @@ class MainWindow(QMainWindow):
         # 任务管理
         self.task_tabs = {}  # 用于存储所有任务选项卡的字典
         self.running_task_tab = None # 追踪当前正在运行任务的Tab实例
+
+        # 更新管理
+        self._is_updating = False
+        self._task_to_run_after_update = None
+        self.update_process = QProcess(self)
         
         # 鼠标光标更新节流定时器
         self._cursor_update_timer = QTimer(self)
@@ -101,16 +107,16 @@ class MainWindow(QMainWindow):
         self.yaml_manager.indent(mapping=2, sequence=4, offset=2)
         self.yaml_manager.boolean_representation = ['False', 'True']
         self.settings_data = self._load_yaml_file(SETTINGS_FILE)
-        self.ui_configs_data = self._load_yaml_file(UI_CONFIGS_FILE)
+        self.configs_data = self._load_yaml_file(UI_CONFIGS_FILE)
 
         # 初始化页面实例
-        self.log_tab = LogTab(self.ui_configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
-        self.settings_tab = SettingsTab(self.settings_data, SETTINGS_FILE, self.yaml_manager, self)
+        self.log_tab = LogTab(self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
+        self.settings_tab = SettingsTab(self.settings_data, SETTINGS_FILE, self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
         self.daily_tab = DailyTab(self.settings_data, SETTINGS_FILE, self.yaml_manager, self)
         self.task_tabs["日常"] = self.daily_tab
-        self.decisive_battle_tab = DecisiveBattleTab(self.settings_data, SETTINGS_FILE, self.ui_configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
+        self.decisive_battle_tab = DecisiveBattleTab(self.settings_data, SETTINGS_FILE, self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
         self.task_tabs["决战"] = self.decisive_battle_tab
-        self.event_tab = EventTab(self.settings_data, SETTINGS_FILE, self.ui_configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
+        self.event_tab = EventTab(self.settings_data, SETTINGS_FILE, self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
         self.task_tabs["活动"] = self.event_tab
 
         # 填充内容
@@ -119,6 +125,11 @@ class MainWindow(QMainWindow):
 
         # 选择管理器
         self.log_tab.task_selector_combo.addItems(self.task_tabs.keys())
+
+        # 更新
+        self.update_process.readyReadStandardOutput.connect(self._log_update_output)
+        self.update_process.readyReadStandardError.connect(self._log_update_output)
+        self.update_process.finished.connect(self._on_update_finished)
 
         # 连接窗口框架信号
         self.title_bar.minimize_requested.connect(self.showMinimized)
@@ -460,50 +471,88 @@ class MainWindow(QMainWindow):
     
 
 # =================== 进程管理 ====================
+    def _set_all_task_buttons_enabled(self, enabled: bool, tooltip: str = ""):
+        """统一启用或禁用所有任务相关的按钮"""
+        for tab in self.task_tabs.values():
+            tab.set_button_enabled(enabled, tooltip)
+        self.log_tab.set_quick_actions_enabled(enabled, tooltip)
+
+    @Slot()
+    def _log_update_output(self):
+        """通用日志记录槽，用于捕获更新进程的输出"""
+        stdout = self.update_process.readAllStandardOutput().data().decode(errors='ignore').strip()
+        stderr = self.update_process.readAllStandardError().data().decode(errors='ignore').strip()
+        if stdout:
+            self.log_tab.append_log_message(stdout)
+        if stderr:
+            self.log_tab.append_log_message(stderr)
+
+    @Slot(int, QProcess.ExitStatus)
+    def _on_update_finished(self, exit_code, exit_status):
+        """异步更新进程结束时调用的槽"""
+        self._log_update_output()
+        self.log_tab.append_log_message("--- 更新检查完成 ---\n")
+
+        self._is_updating = False
+        self._on_any_task_finished("")
+        # 如果有一个等待执行的任务，现在就启动它
+        if self._task_to_run_after_update:
+            task_name = self._task_to_run_after_update
+            self._task_to_run_after_update = None
+            self._handle_task_toggle_request(task_name, force_run=True)
+    
     @Slot(str)
     @Slot()
-    def _handle_task_toggle_request(self, task_name: str = ""):
-        """
-        统一处理所有来自任务页和日志页的启动/停止请求。
-        - 如果有任务正在运行，则任何请求都视为停止当前任务。
-        - 如果没有任务运行，则根据传入的 task_name 启动新任务。
-        """
-        # 场景一：有任务正在运行，则停止该任务
+    def _handle_task_toggle_request(self, task_name: str = "", force_run: bool = False):
+        """统一处理所有启动/停止请求。"""
+        if self._is_updating:
+            self.log_tab.append_log_message("提示：正在检查更新，请稍候...")
+            return
+        
         if self.running_task_tab:
             self.running_task_tab._on_task_toggle()
-        # 场景二：没有任务在运行，且给定了有效的任务名，则启动新任务
-        elif task_name:
-            target_tab = self.task_tabs.get(task_name)
-            if target_tab:
-                target_tab._on_task_toggle()
+            return
+
+        if task_name:
+            # 只有在非强制模式下才检查更新
+            if self.configs_data.get('check_update_gui', False) and not force_run:
+                self._is_updating = True
+                self._task_to_run_after_update = task_name
+
+                self.log_tab.append_log_message("--- 正在从清华镜像源检查更新 ---")
+                self._set_all_task_buttons_enabled(False, "正在检查更新...")
+                
+                command_args = [
+                    "-m", "pip", "install", "--upgrade", "autowsgr",
+                    "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"
+                ]
+                self.update_process.start(sys.executable, command_args)
+            else:
+                # 直接启动任务（或在强制模式下启动）
+                target_tab = self.task_tabs.get(task_name)
+                if target_tab:
+                    target_tab._on_task_toggle()
 
     @Slot(str)
     def _on_any_task_started(self, running_task_name: str):
         """当任何一个任务启动时，此槽函数被调用，负责更新全局UI状态"""
-        # 记录当前正在运行的Tab实例
         self.running_task_tab = self.task_tabs.get(running_task_name)
-        
-        # 更新UI
+        if not self.running_task_tab: return
+
         self.title_bar.start_task_animation(running_task_name)
         self.log_tab.update_for_task_state(True, running_task_name)
-
-        # 遍历所有任务标签页，禁用其他任务的启动按钮
+        
+        tooltip = f"'{running_task_name}' 正在运行"
         for task_name, tab_instance in self.task_tabs.items():
-            if task_name != running_task_name:
-                tooltip = f"'{running_task_name}' 正在运行"
+            if tab_instance is not self.running_task_tab:
                 tab_instance.set_button_enabled(False, tooltip)
 
     @Slot(str)
     def _on_any_task_finished(self, finished_task_name: str):
         """当任何一个任务结束时，此槽函数被调用，负责重置全局UI状态"""
-        # 清空正在运行的Tab实例记录
         self.running_task_tab = None
 
-        # 更新UI
         self.title_bar.stop_task_animation()
         self.log_tab.update_for_task_state(False)
 
-        # 遍历所有任务标签页，重新启用它们的按钮
-        for tab_instance in self.task_tabs.values():
-            tab_instance.set_button_enabled(True)
-            tab_instance.set_button_enabled(True)
+        self._set_all_task_buttons_enabled(True)

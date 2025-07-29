@@ -24,11 +24,13 @@ class SettingsTab(QWidget):
     """全局设置选项卡"""
     plan_root_changed = Signal()
 
-    def __init__(self, settings_data, settings_path, yaml_manager, parent=None):
+    def __init__(self, settings_data, settings_path, configs_data, configs_path, yaml_manager, parent=None):
         super().__init__(parent)
         self.settings_data = settings_data
-        self.yaml_manager = yaml_manager
         self.settings_path = settings_path
+        self.configs_data = configs_data
+        self.configs_path = configs_path
+        self.yaml_manager = yaml_manager
         self.selected_ships = set()
         self._setup_ui()
         self._connect_signals()
@@ -45,7 +47,7 @@ class SettingsTab(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
 
         # 提前创建所有控件
-        self.check_update_cb = CustomCheckBox("检查更新")
+        self.check_update_cb = CustomCheckBox("自动更新")
         self.debug_cb = CustomCheckBox("启用Debug模式")
         self.log_level_label = QLabel("日志级别:")
         self.log_level_combo = CustomComboBox()
@@ -61,9 +63,9 @@ class SettingsTab(QWidget):
         self.bathroom_count_spin.setRange(1, 12)
         self.emulator_type_label = QLabel("模拟器类型:")
         self.emulator_type_input = QLineEdit()
-        self.emulator_name_label = QLabel("MuMu模拟器监听地址:")
+        self.emulator_name_label = QLabel("模拟器监听地址:")
         self.emulator_name_input = QLineEdit()
-        self.emulator_name_input.setPlaceholderText("127.0.0.1:7555")
+        self.emulator_name_input.setPlaceholderText("默认不填")
         self.plan_root_input = QLineEdit()
         self.plan_root_input.setReadOnly(True)
         self.plan_root_button = QPushButton("选择文件夹")
@@ -81,7 +83,7 @@ class SettingsTab(QWidget):
         left_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         group1_content = create_form_layout([
-            (self.check_update_cb, "启动时自动检查更新"),
+            (self.check_update_cb, "启动任务前自动更新AutoWSGR"),
             (self.debug_cb, "启用后会输出更详细的日志信息"),
             ((self.log_level_label, self.log_level_combo), "推荐使用INFO"),
             ((self.delay_label, self.delay_input), "脚本延迟时间(s)，若模拟器卡顿可调高<br>默认为1.5s")
@@ -91,8 +93,8 @@ class SettingsTab(QWidget):
             ((self.bathroom_count_label, self.bathroom_count_spin), "购买浴室会送1个，3个浴室共12个")
         ])
         group3_content = create_form_layout([
-            ((self.emulator_type_label, self.emulator_type_input), "填写名称，例如雷电、MuMu、蓝叠、夜神、逍遥等"),
-            ((self.emulator_name_label, self.emulator_name_input), "只有使用MuMu模拟器需要填写<br>默认为127.0.0.1:7555")
+            ((self.emulator_type_label, self.emulator_type_input), "填写名称，类型有：<br>雷电、蓝叠、MuMu、云手机和其他"),
+            ((self.emulator_name_label, self.emulator_name_input), "模拟器使用多开功能时填写")
         ])
 
         left_layout.addWidget(create_group("AutoWSGR设置", group1_content))
@@ -161,7 +163,7 @@ class SettingsTab(QWidget):
 
     def _connect_signals(self):
         """将此选项卡内的所有信号连接到其处理方法"""
-        self.check_update_cb.toggled.connect(lambda v: self._handle_value_change('check_update', v))
+        self.check_update_cb.toggled.connect(lambda v: self._handle_value_change('check_update_gui', v))
         self.debug_cb.toggled.connect(lambda v: self._handle_value_change('debug', v))
         self.log_level_combo.currentTextChanged.connect(lambda v: self._handle_value_change('log_level', v))
         self.delay_input.editingFinished.connect(self._save_delay)
@@ -180,7 +182,7 @@ class SettingsTab(QWidget):
 
     def _load_data_to_ui(self):
         """从配置数据加载初始值到UI控件。"""
-        self.check_update_cb.setChecked(self.settings_data.get('check_update', False))
+        self.check_update_cb.setChecked(self.configs_data.get('check_update_gui', False))
         self.debug_cb.setChecked(self.settings_data.get('debug', False))
         self.log_level_combo.setCurrentText(self.settings_data.get('log_level', 'DEBUG'))
         self.delay_input.setText(str(self.settings_data.get('delay', 1.5)))
@@ -208,8 +210,12 @@ class SettingsTab(QWidget):
     def _handle_value_change(self, path, value):
         """统一处理配置值的更新和保存，并处理可能发生的错误"""
         try:
-            update_config_value(self.settings_data, path, value)
-            save_config(self.yaml_manager, self.settings_data, self.settings_path)
+            if path == 'check_update_gui':
+                update_config_value(self.configs_data, path, value)
+                save_config(self.yaml_manager, self.configs_data, self.configs_path)
+            else:
+                update_config_value(self.settings_data, path, value)
+                save_config(self.yaml_manager, self.settings_data, self.settings_path)
         except Exception as e:
             print(f"配置文件保存失败: {e}")
 
@@ -227,7 +233,7 @@ class SettingsTab(QWidget):
         )
 
     def _on_emulator_type_changed(self, text):
-        """当模拟器类型文本变化时，动态控制MuMu地址输入框的可用性"""
+        """当模拟器类型文本变化时，规范MuMu大小写"""
         is_mumu = bool(re.fullmatch(r"mumu", text.strip(), re.IGNORECASE))
 
         if is_mumu:
@@ -240,15 +246,9 @@ class SettingsTab(QWidget):
             value_to_save = text
 
         self._handle_value_change('emulator_type', value_to_save)
-        self.emulator_name_label.setEnabled(is_mumu)
-        self.emulator_name_input.setEnabled(is_mumu)
-
-        if not is_mumu:
-            self.emulator_name_input.clear()
-            self._handle_value_change('emulator_name', None) # 保存为 null
 
     def _validate_and_save_emulator_name(self):
-        """验证并保存MuMu模拟器地址"""
+        """验证并保存模拟器地址"""
         pattern = r"^(localhost|(\d{1,3}(\.\d{1,3}){3})):\d{1,5}$"
         validate_and_save_text_input(
             line_edit=self.emulator_name_input,

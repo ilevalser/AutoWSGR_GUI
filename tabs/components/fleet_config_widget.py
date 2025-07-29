@@ -18,12 +18,42 @@ class SourceShipList(ListBox):
     def __init__(self, parent=None):
         """初始化控件，设置显示模式和拖拽模式。"""
         super().__init__(parent)
+        self._deselect_on_release = False
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self.setViewMode(QListView.ViewMode.IconMode)
         self.setFlow(QListView.Flow.LeftToRight)
         self.setWrapping(True)
         self.setResizeMode(QListView.ResizeMode.Adjust)
         self.setGridSize(QSize(116, 30))
+
+    def mousePressEvent(self, event):
+        """重写鼠标按下事件。"""
+        item = self.itemAt(event.pos())
+
+        # 左键点击在一个已选项上
+        if event.button() == Qt.MouseButton.LeftButton and item and item.isSelected():
+            self._deselect_on_release = True
+        
+        # 所有其他点击
+        else:
+            self._deselect_on_release = False
+            super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        """重写鼠标抬起事件。"""
+        # 如果标志位升起，说明这是一个需要自定义处理的 release
+        if self._deselect_on_release and event.button() == Qt.MouseButton.LeftButton:
+            item = self.itemAt(event.pos())
+
+            if item and item.isSelected():
+                item.setSelected(False)
+            
+            # 重置标志位并消费
+            self._deselect_on_release = False
+        
+        # 所有其他 release 事件
+        else:
+            super().mouseReleaseEvent(event)
 
     def dragEnterEvent(self, event):
         """仅接受舰队列表拖入。"""
@@ -178,14 +208,8 @@ class FleetConfigWidget(QWidget):
         self.custom_ships = initial_custom_ships if initial_custom_ships else []
         # UI控件创建
         self._create_widgets()
-        def remove_pre_condition():
-            if not self.source_ships_list.selectedItems():
-                return False
-            return True
-        self.remove_button_manager = ConfirmButtonManager(
-            self.remove_custom_ship_button,
-            pre_condition_check=remove_pre_condition
-        )
+        self.remove_button_manager = ConfirmButtonManager(self.remove_custom_ship_button)
+
         # UI布局与信号连接
         self._layout = self._setup_ui()
         self._connect_signals()
@@ -197,36 +221,29 @@ class FleetConfigWidget(QWidget):
         return self._layout
 
     def process_app_event(self, watched, event):
-        """
-        处理由父控件转发来的全局事件。
-        1. 点击输入框时自动切换到“自定义”筛选。
-        2. 任何非删除点击都会取消列表选中。
-        3. 重置二次确认按钮的状态。
-        """
+        """处理由父控件转发来的全局事件。"""
         if not self.isVisible():
-            return super().eventFilter(watched, event)
+            return False
 
-        # 1. 点击输入框时自动切换筛选
+        # 点击输入框时自动切换筛选
         if watched == self.custom_ship_input and event.type() == QEvent.Type.FocusIn:
             for button in self.filter_button_group.buttons():
                 if button.text() == "自定义" and not button.isChecked():
                     button.click()
-                    break # 找到并点击后即可退出循环
+                    break
 
-        # 2. 处理全局鼠标点击事件
+        # 处理全局鼠标点击事件
         if event.type() == QEvent.Type.MouseButtonPress:
             clicked_widget = QApplication.widgetAt(event.globalPosition().toPoint())
 
-            is_click_on_delete_button = False
-            widget_iterator = clicked_widget
-            while widget_iterator is not None:
-                if widget_iterator == self.remove_custom_ship_button:
-                    is_click_on_delete_button = True
-                    break
-                widget_iterator = widget_iterator.parent()
+            # 检查点击是否发生在删除按钮上
+            is_click_on_delete_button = self.remove_custom_ship_button.isAncestorOf(clicked_widget) or clicked_widget == self.remove_custom_ship_button
 
-            # 全局单选逻辑
-            if self.source_ships_list.selectedItems() and not is_click_on_delete_button:
+            # 检查点击是否发生在源列表上
+            is_click_on_source_list = self.source_ships_list.isAncestorOf(clicked_widget) or clicked_widget == self.source_ships_list
+
+            # 全局单选逻辑：当点击发生在列表外部且不是删除按钮时，清空选择
+            if self.source_ships_list.selectedItems() and not is_click_on_source_list and not is_click_on_delete_button:
                 self.source_ships_list.clearSelection()
 
             # 二次确认按钮重置逻辑
@@ -361,6 +378,7 @@ class FleetConfigWidget(QWidget):
         self.filter_button_group.buttonClicked.connect(self._update_source_list_filter)
         self.add_custom_ship_button.clicked.connect(self._on_add_custom_ship)
         self.remove_button_manager.confirmed_click.connect(self._on_remove_custom_ship)
+        self.source_ships_list.itemSelectionChanged.connect(self._update_remove_button_state)
         self.level1_list.contentChanged.connect(
             lambda: self.level1_fleet_changed.emit(self.get_list_data(self.level1_list))
         )
@@ -379,8 +397,6 @@ class FleetConfigWidget(QWidget):
             return
         filter_category = checked_button.text()
 
-        self.remove_custom_ship_button.setEnabled(filter_category == "自定义")
-
         is_custom_mode = (filter_category == "自定义")
         self.source_ships_list.setProperty("customMode", is_custom_mode)
         self.source_ships_list.style().unpolish(self.source_ships_list)
@@ -398,6 +414,7 @@ class FleetConfigWidget(QWidget):
 
         unique_ships = sorted(list(set(filter(None, ships_to_display))), key=natural_sort_key)
         self.source_ships_list.addItems(unique_ships)
+        self._update_remove_button_state()
 
         grid_size = self.source_ships_list.gridSize()
         for i in range(self.source_ships_list.count()):
@@ -440,6 +457,18 @@ class FleetConfigWidget(QWidget):
         self.custom_ships_changed.emit(self.custom_ships)
         self._update_source_list_filter()
         self.log_message_signal.emit(f"已移除自定义舰船：“{ship_name}”")
+
+    def _update_remove_button_state(self):
+        """根据当前筛选和列表选择，更新删除按钮的启用状态。"""
+        # 当前筛选按钮是“自定义”
+        checked_button = self.filter_button_group.checkedButton()
+        is_custom_mode = checked_button and checked_button.text() == "自定义"
+        
+        # 源舰船列表中有项目被选中
+        has_selection = bool(self.source_ships_list.selectedItems())
+        
+        # 只有两个条件同时满足时，按钮才可用
+        self.remove_custom_ship_button.setEnabled(is_custom_mode and has_selection)
 
     def ensure_main_fleet_uniqueness(self, ship_name, list_to_ignore):
         """保证一级/二级舰队互斥，不重复出现同一舰船。"""
