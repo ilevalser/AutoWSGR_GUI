@@ -17,7 +17,7 @@ from utils.config_utils import (
 )
 from constants import (
     SHIP_DISPLAY_ORDER, CATEGORY_DISPLAY_ORDER,
-    SHIP_TYPE_CATEGORIES_LOGIC, LOG_LEVEL, SHIP_NAME_FILE
+    SHIP_TYPE_CATEGORIES_LOGIC, LOG_LEVEL, SHIP_NAME_FILE, EMULATOR_TYPE_ITEMS
 )
 
 class SettingsTab(QWidget):
@@ -62,7 +62,8 @@ class SettingsTab(QWidget):
         self.bathroom_count_spin = CustomSpinBox()
         self.bathroom_count_spin.setRange(1, 12)
         self.emulator_type_label = QLabel("模拟器类型:")
-        self.emulator_type_input = QLineEdit()
+        self.emulator_type_combo = CustomComboBox()
+        self.emulator_type_combo.addItems(EMULATOR_TYPE_ITEMS)
         self.emulator_name_label = QLabel("模拟器监听地址:")
         self.emulator_name_input = QLineEdit()
         self.emulator_name_input.setPlaceholderText("默认不填")
@@ -93,8 +94,8 @@ class SettingsTab(QWidget):
             ((self.bathroom_count_label, self.bathroom_count_spin), "购买浴室会送1个，3个浴室共12个")
         ])
         group3_content = create_form_layout([
-            ((self.emulator_type_label, self.emulator_type_input), "填写名称，类型有：<br>雷电、蓝叠、MuMu、云手机和其他"),
-            ((self.emulator_name_label, self.emulator_name_input), "模拟器使用多开功能时填写")
+            ((self.emulator_type_label, self.emulator_type_combo), "选择使用的模拟器类型"),
+            ((self.emulator_name_label, self.emulator_name_input), "模拟器使用多开功能时填写<br>雷电：emulator-xxxx<br>其他模拟器：ip:port"),
         ])
 
         left_layout.addWidget(create_group("AutoWSGR设置", group1_content))
@@ -169,7 +170,8 @@ class SettingsTab(QWidget):
         self.delay_input.editingFinished.connect(self._save_delay)
         self.bathroom_feature_count_spin.valueChanged.connect(lambda v: self._handle_value_change('bathroom_feature_count', v))
         self.bathroom_count_spin.valueChanged.connect(lambda v: self._handle_value_change('bathroom_count', v))
-        self.emulator_type_input.textChanged.connect(self._on_emulator_type_changed)
+        self.emulator_type_combo.currentTextChanged.connect(self._on_emulator_type_changed)
+        self.emulator_type_combo.currentTextChanged.connect(self._validate_and_save_emulator_name)
         self.emulator_name_input.editingFinished.connect(self._validate_and_save_emulator_name)
         self.plan_root_button.clicked.connect(self._on_select_plan_root_clicked)
         self.dock_full_destroy_cb.toggled.connect(lambda v: self._handle_value_change('dock_full_destroy', v))
@@ -188,9 +190,8 @@ class SettingsTab(QWidget):
         self.delay_input.setText(str(self.settings_data.get('delay', 1.5)))
         self.bathroom_feature_count_spin.setValue(self.settings_data.get('bathroom_feature_count', 3))
         self.bathroom_count_spin.setValue(self.settings_data.get('bathroom_count', 8))
-        emulator_type_text = self.settings_data.get('emulator_type', '')
-        self.emulator_type_input.setText(emulator_type_text)
-        self._on_emulator_type_changed(emulator_type_text)  # 确保初始状态正确
+        emulator_type_text = self.settings_data.get('emulator_type', '其他')
+        self.emulator_type_combo.setCurrentText(emulator_type_text)
         emulator_name_text = self.settings_data.get('emulator_name', '')
         self.emulator_name_input.setText(emulator_name_text or "") # 确保 None 值不会错误地传递
         self._validate_and_save_emulator_name()  # 确保初始状态正确
@@ -233,23 +234,18 @@ class SettingsTab(QWidget):
         )
 
     def _on_emulator_type_changed(self, text):
-        """当模拟器类型文本变化时，规范MuMu大小写"""
-        is_mumu = bool(re.fullmatch(r"mumu", text.strip(), re.IGNORECASE))
-
-        if is_mumu:
-            value_to_save = "MuMu"
-            if self.emulator_type_input.text() != value_to_save:
-                self.emulator_type_input.blockSignals(True)
-                self.emulator_type_input.setText(value_to_save)
-                self.emulator_type_input.blockSignals(False)
-        else:
-            value_to_save = text
-
-        self._handle_value_change('emulator_type', value_to_save)
+        """当模拟器类型变化时，保存新值"""
+        self._handle_value_change('emulator_type', text)
 
     def _validate_and_save_emulator_name(self):
-        """验证并保存模拟器地址"""
-        pattern = r"^(localhost|(\d{1,3}(\.\d{1,3}){3})):\d{1,5}$"
+        """根据模拟器类型验证并保存模拟器地址"""
+        emulator_type = self.emulator_type_combo.currentText()
+        
+        if emulator_type == "雷电":
+            pattern = r"^emulator-\d+$"
+        else:
+            pattern = r"^(localhost|(\d{1,3}(\.\d{1,3}){3})):\d{1,5}$"
+        
         validate_and_save_text_input(
             line_edit=self.emulator_name_input,
             config_path="emulator_name",
