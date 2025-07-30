@@ -9,7 +9,7 @@ from tabs.components.list_box import ListBox
 from utils.ui_utils import ConfirmButtonManager, natural_sort_key
 
 # =========================
-# 可用舰船列表（左侧）
+# 可用舰船列表
 # =========================
 class SourceShipList(ListBox):
     """可用舰船列表控件，支持拖拽到舰队列表和自定义筛选。"""
@@ -18,42 +18,50 @@ class SourceShipList(ListBox):
     def __init__(self, parent=None):
         """初始化控件，设置显示模式和拖拽模式。"""
         super().__init__(parent)
-        self._deselect_on_release = False
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self.setViewMode(QListView.ViewMode.IconMode)
         self.setFlow(QListView.Flow.LeftToRight)
         self.setWrapping(True)
         self.setResizeMode(QListView.ResizeMode.Adjust)
         self.setGridSize(QSize(116, 30))
+        self.setDropIndicatorShown(False)
+        self._press_pos = None
+        self._item_pressed = None
+        self._was_selected_on_press = False
 
     def mousePressEvent(self, event):
-        """重写鼠标按下事件。"""
-        item = self.itemAt(event.pos())
-
-        # 左键点击在一个已选项上
-        if event.button() == Qt.MouseButton.LeftButton and item and item.isSelected():
-            self._deselect_on_release = True
-        
-        # 所有其他点击
-        else:
-            self._deselect_on_release = False
-            super().mousePressEvent(event)
+        """重写鼠标按下事件，在 mouseReleaseEvent 中判断是单击还是拖拽。"""
+        # 记录下可能被操作的项和位置
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._press_pos = event.pos()
+            self._item_pressed = self.itemAt(self._press_pos)
+            
+            if self._item_pressed:
+                self._was_selected_on_press = self._item_pressed.isSelected()
+            else:
+                self._was_selected_on_press = False
+    
+        super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
-        """重写鼠标抬起事件。"""
-        # 如果标志位升起，说明这是一个需要自定义处理的 release
-        if self._deselect_on_release and event.button() == Qt.MouseButton.LeftButton:
-            item = self.itemAt(event.pos())
+        """
+        重写鼠标抬起事件，通过判断鼠标移动距离来区分单击和拖拽。"""
+        # 仅当按下和抬起都是左键，且确实按到了一个项目上时才处理
+        if (self._item_pressed and self._press_pos and
+                event.button() == Qt.MouseButton.LeftButton):
+            distance = (event.pos() - self._press_pos).manhattanLength()
 
-            if item and item.isSelected():
-                item.setSelected(False)
-            
-            # 重置标志位并消费
-            self._deselect_on_release = False
-        
-        # 所有其他 release 事件
-        else:
-            super().mouseReleaseEvent(event)
+            # 如果移动距离小于阈值
+            if distance < QApplication.startDragDistance():
+                item_at_release = self.itemAt(event.pos())
+                # 确保抬起时仍然在该项目上，并且该项目是选中的
+                if item_at_release == self._item_pressed and self._was_selected_on_press:
+                    item_at_release.setSelected(False)
+
+        super().mouseReleaseEvent(event)
+        self._press_pos = None
+        self._item_pressed = None
+        self._was_selected_on_press = False
 
     def dragEnterEvent(self, event):
         """仅接受舰队列表拖入。"""
@@ -81,7 +89,7 @@ class SourceShipList(ListBox):
             event.ignore()
 
 # =========================
-# 舰队列表（右侧）
+# 舰队列表
 # =========================
 class FleetShipList(ListBox):
     """舰队列表控件，支持与可用舰船列表和其他舰队列表的拖拽交互。"""
