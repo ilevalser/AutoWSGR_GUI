@@ -36,6 +36,7 @@ class SettingsTab(QWidget):
 
         # 更新船名文件路径
         update_config_value(self.settings_data, 'ship_name_file', SHIP_NAME_FILE.as_posix())
+        update_config_value(self.settings_data, 'check_update', False)
         save_config(self.yaml_manager, self.settings_data, self.settings_path)
         
     def _setup_ui(self):
@@ -291,6 +292,7 @@ class SettingsTab(QWidget):
                     print("错误: 配置文件必须是有效的键值对集合。")
                     return
 
+                new_data['check_update'] = False
                 self.settings_data.clear()
                 self.settings_data.update(new_data)
                 save_config(self.yaml_manager, self.settings_data, self.settings_path)
