@@ -434,9 +434,11 @@ QLineEdit[state="invalid"] {
     border: 1px solid red;
 }
 
-QPushButton#plans_button {
-    min-width: 120px;
+QPushButton#plans_button,
+QPushButton#settings_button {
+    min-width: 160px;
     min-height: 26px;
+    padding-left: 5px;
 }
 
 /* 4.2 “启动/中止”按钮 */

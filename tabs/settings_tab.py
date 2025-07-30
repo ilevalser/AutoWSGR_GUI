@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, Signal
 from ruamel.yaml.comments import CommentedSeq
+from ruamel.yaml import YAMLError
 import re
 from pathlib import Path
 
@@ -11,10 +12,7 @@ from tabs.components.check_box import CustomCheckBox
 from tabs.components.spin_box import CustomSpinBox
 from tabs.components.combo_box import CustomComboBox
 from utils.ui_utils import create_form_layout, create_group
-from utils.config_utils import (
-    update_config_value, save_config, validate_and_save_line_edit,
-    validate_and_save_text_input
-)
+from utils.config_utils import update_config_value, save_config, validate_and_save_line_edit
 from constants import (
     SHIP_DISPLAY_ORDER, CATEGORY_DISPLAY_ORDER,
     SHIP_TYPE_CATEGORIES_LOGIC, LOG_LEVEL, SHIP_NAME_FILE, EMULATOR_TYPE_ITEMS
@@ -69,8 +67,13 @@ class SettingsTab(QWidget):
         self.emulator_name_input.setPlaceholderText("默认不填")
         self.plan_root_input = QLineEdit()
         self.plan_root_input.setReadOnly(True)
+        self.plan_root_label = QLabel("选择方案路径文件夹：")
+        self.plan_root_label.setObjectName("FormLabel")
         self.plan_root_button = QPushButton("选择文件夹")
         self.plan_root_button.setObjectName("plans_button")
+        self.settings_data_label = QLabel("导入配置文件：")
+        self.settings_data_button = QPushButton("选择文件导入")
+        self.settings_data_button.setObjectName("settings_button")
         self.dock_full_destroy_cb = CustomCheckBox("船坞满时解装")
         self.destroy_ship_work_mode_label = QLabel("解装模式:")
         self.destroy_ship_work_mode_combo = CustomComboBox()
@@ -108,15 +111,23 @@ class SettingsTab(QWidget):
         right_layout.setContentsMargins(5, 5, 5, 5)
         right_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        plan_settings_layout = QHBoxLayout()
-        plan_settings_layout.setContentsMargins(0, 0, 0, 0)
-        plan_settings_layout.addWidget(self.plan_root_input, 1)
-        plan_settings_layout.addWidget(self.plan_root_button)
-        right_layout.addWidget(create_group("方案路径设置", plan_settings_layout, (15, 15, 15, 10)))
+        path_layout = QGridLayout()
+        path_layout.setContentsMargins(0, 0, 0, 0)
+        path_layout.addWidget(self.plan_root_label, 0, 0)
+        path_layout.addWidget(self.plan_root_input, 1, 0)
+        path_layout.addWidget(self.plan_root_button, 1, 1)
+        settings_input_layout = create_form_layout([((self.settings_data_label, self.settings_data_button), "可以选择user_settings.yaml导入配置")])
+        nested_container = QWidget()
+        nested_container.setLayout(settings_input_layout)
+        path_layout.addWidget(nested_container, 2, 0, 1, 2)
+        path_layout.setColumnStretch(0, 2)
+        path_layout.setColumnStretch(1, 1)
+        right_layout.addWidget(create_group("路径设置", path_layout, (15, 15, 15, 0)))
+
         destroy_content = create_form_layout([
             (self.dock_full_destroy_cb, "船坞满后自动根据下方黑/白名单设置进行解装"),
             ((self.destroy_ship_work_mode_label, self.destroy_ship_work_mode_combo),
-             "选择解装时使用的策略<br>黑名单：解装选中的船<br>白名单：保留选中的船")
+             "黑名单：解装选中的船<br>白名单：保留选中的船")
         ])
         right_layout.addWidget(create_group("解装设置", destroy_content))
 
@@ -128,7 +139,6 @@ class SettingsTab(QWidget):
         self.all_ships_button.setCheckable(True)
         self.all_ships_button.setProperty("class", "TallButton")
         unified_content_layout.addWidget(self.all_ships_button)
-        unified_content_layout.addSpacing(10)
 
         ship_grid_layout = QGridLayout()
         ship_grid_layout.setSpacing(8)
@@ -142,7 +152,6 @@ class SettingsTab(QWidget):
             row, col = divmod(i, 5)
             ship_grid_layout.addWidget(button, row, col)
         unified_content_layout.addLayout(ship_grid_layout)
-        unified_content_layout.addSpacing(10)
 
         category_grid_layout = QGridLayout()
         category_grid_layout.setSpacing(8)
@@ -173,6 +182,7 @@ class SettingsTab(QWidget):
         self.emulator_type_combo.currentTextChanged.connect(self._on_emulator_type_changed)
         self.emulator_type_combo.currentTextChanged.connect(self._validate_and_save_emulator_name)
         self.emulator_name_input.editingFinished.connect(self._validate_and_save_emulator_name)
+        self.settings_data_button.clicked.connect(self._on_import_settings_clicked)
         self.plan_root_button.clicked.connect(self._on_select_plan_root_clicked)
         self.dock_full_destroy_cb.toggled.connect(lambda v: self._handle_value_change('dock_full_destroy', v))
         self.destroy_ship_work_mode_combo.currentIndexChanged.connect(self._on_destroy_mode_changed)
@@ -186,17 +196,17 @@ class SettingsTab(QWidget):
         """从配置数据加载初始值到UI控件。"""
         self.check_update_cb.setChecked(self.configs_data.get('check_update_gui', False))
         self.debug_cb.setChecked(self.settings_data.get('debug', False))
-        self.log_level_combo.setCurrentText(self.settings_data.get('log_level', 'DEBUG'))
+        self.log_level_combo.setCurrentText(self.settings_data.get('log_level', 'INFO'))
         self.delay_input.setText(str(self.settings_data.get('delay', 1.5)))
-        self.bathroom_feature_count_spin.setValue(self.settings_data.get('bathroom_feature_count', 3))
-        self.bathroom_count_spin.setValue(self.settings_data.get('bathroom_count', 8))
+        self.bathroom_feature_count_spin.setValue(self.settings_data.get('bathroom_feature_count', 1))
+        self.bathroom_count_spin.setValue(self.settings_data.get('bathroom_count', 1))
         emulator_type_text = self.settings_data.get('emulator_type', '其他')
         self.emulator_type_combo.setCurrentText(emulator_type_text)
         emulator_name_text = self.settings_data.get('emulator_name', '')
-        self.emulator_name_input.setText(emulator_name_text or "") # 确保 None 值不会错误地传递
+        self.emulator_name_input.setText(emulator_name_text or '') # 确保 None 值不会错误地传递
         self._validate_and_save_emulator_name()  # 确保初始状态正确
         plan_root_path = self.settings_data.get('plan_root', '')
-        self.plan_root_input.setText(plan_root_path or "")
+        self.plan_root_input.setText(plan_root_path or '')
         self._validate_and_save_plan_root(plan_root_path, initial_load=True)
         self.dock_full_destroy_cb.setChecked(self.settings_data.get('dock_full_destroy', False))
         work_mode_val = self.settings_data.get('destroy_ship_work_mode', 0)
@@ -261,6 +271,38 @@ class SettingsTab(QWidget):
         line_edit.style().unpolish(line_edit)
         line_edit.style().polish(line_edit)
 
+    def _on_import_settings_clicked(self):
+        """打开文件对话框以导入 user_settings.yaml 配置文件。"""
+        start_dir = str(Path(self.settings_path).parent)
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "选择要导入的配置文件",
+            start_dir,
+            "YAML Files (*.yaml);;All Files (*)"
+        )
+
+        if file_path:
+            try:
+                p = Path(file_path)
+                with p.open('r', encoding='utf-8') as f:
+                    new_data = self.yaml_manager.load(f)
+
+                if not isinstance(new_data, dict):
+                    print("错误: 配置文件必须是有效的键值对集合。")
+                    return
+
+                self.settings_data.clear()
+                self.settings_data.update(new_data)
+                save_config(self.yaml_manager, self.settings_data, self.settings_path)
+
+                self._load_data_to_ui()
+                self.plan_root_changed.emit()
+
+            except YAMLError as e:
+                print(f"错误: 导入的 YAML 文件格式无效: {e}")
+            except Exception as e:
+                print(f"错误: 导入配置文件时发生未知错误: {e}")
+    
     def _on_select_plan_root_clicked(self):
         """打开文件夹对话框以选择方案根目录"""
         current_path = self.plan_root_input.text()

@@ -26,7 +26,8 @@ class DailyTab(BaseTaskTab):
         self.settings_data = settings_data
         self.settings_path = settings_path
         self.yaml_manager = yaml_manager
-        self.normal_plans_dir = self.settings_data.get('plan_root') + '/normal_fight'
+        plan_root = self.settings_data.get('plan_root')
+        self.normal_plans_dir = plan_root + '/normal_fight' if plan_root else None
 
         # 状态变量
         self.normal_plans_dir = None

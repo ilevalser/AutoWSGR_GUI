@@ -202,6 +202,10 @@ class EventTab(BaseTaskTab):
         if not folder_name or "未找到" in folder_name or "没有可用" in folder_name:
             self.event_task_combo.setEnabled(False)
             return
+        if not self.event_plans_dir:
+            self.event_task_combo.addItem("事件方案根目录未设置")
+            self.event_task_combo.setEnabled(False)
+            return
 
         task_dir = os.path.join(self.event_plans_dir, folder_name)
         if not os.path.isdir(task_dir):
