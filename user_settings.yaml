@@ -14,12 +14,12 @@ bathroom_feature_count: 3
 bathroom_count: 8
 
 emulator_type: 蓝叠
-emulator_name: ''
+emulator_name:
 daily_automation:
   auto_expedition: True
   auto_gain_bonus: True
   auto_bath_repair: True
-  auto_set_support: False
+  auto_set_support: True
   auto_battle: True
   battle_type: 困难驱逐
   auto_exercise: True

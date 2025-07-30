@@ -245,15 +245,21 @@ class SettingsTab(QWidget):
             pattern = r"^emulator-\d+$"
         else:
             pattern = r"^(localhost|(\d{1,3}(\.\d{1,3}){3})):\d{1,5}$"
-        
-        validate_and_save_text_input(
-            line_edit=self.emulator_name_input,
-            config_path="emulator_name",
-            settings_data=self.settings_data,
-            settings_path=self.settings_path,
-            yaml_manager=self.yaml_manager,
-            validation_func=lambda text: not text or bool(re.match(pattern, text))
-        )
+
+        line_edit = self.emulator_name_input
+        text = line_edit.text()
+        is_valid = not text or bool(re.match(pattern, text))
+
+        if is_valid:
+            line_edit.setProperty("state", "valid")
+            value_to_save = text or None
+            self._handle_value_change('emulator_name', value_to_save)
+        else:
+            line_edit.setProperty("state", "invalid")
+
+        # 刷新输入框样式
+        line_edit.style().unpolish(line_edit)
+        line_edit.style().polish(line_edit)
 
     def _on_select_plan_root_clicked(self):
         """打开文件夹对话框以选择方案根目录"""
