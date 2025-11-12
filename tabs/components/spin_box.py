@@ -80,6 +80,8 @@ class CustomSpinBox(QWidget):
                 obj.setIcon(QIcon(pixmap_hover))
                 hover_state = "left" if obj is self.decr_button else "right"
                 self._update_hover_state(hover_state) # 设置父容器的渐变
+                self.line_edit.setProperty("parentButtonHovered", True)
+                self.line_edit.style().polish(self.line_edit)
                 return True
             elif event.type() == QEvent.Type.Leave:
                 obj.setIcon(QIcon(pixmap_normal))
@@ -90,6 +92,8 @@ class CustomSpinBox(QWidget):
             # 当鼠标进入输入框区域时，立即取消渐变效果
             if event.type() == QEvent.Type.Enter:
                 self._update_hover_state("none")
+                self.line_edit.setProperty("parentButtonHovered", False)
+                self.line_edit.style().polish(self.line_edit)
             # 处理焦点事件
             if event.type() == QEvent.Type.FocusIn:
                 self.setProperty("hasFocus", True)
@@ -104,6 +108,8 @@ class CustomSpinBox(QWidget):
         self.decr_button.setIcon(QIcon(self.minus_pixmap_normal))
         self.incr_button.setIcon(QIcon(self.plus_pixmap_normal))
         self._update_hover_state("none")
+        self.line_edit.setProperty("parentButtonHovered", False)
+        self.line_edit.style().polish(self.line_edit)
         super().leaveEvent(event)
     
     def _decrement(self):

@@ -1,8 +1,7 @@
 check_update_gui: False
 auto_scroll: True
-custom_ss_names:
+custom_names:
   - "决战1"
-  - "决战10"
   - "决战2"
   - "决战3"
   - "决战4"
@@ -11,11 +10,13 @@ custom_ss_names:
   - "决战7"
   - "决战8"
   - "决战9"
+  - "决战X"
 sortie_times: 1
 event_automation:
-  event_folder: '20250710'
-  plan_name: E9A夜战
-  fleet_id: 1
-  battle_count: 100
-  reuse_daily_settings: True
+  event_folder: '20250930'
+  plan_name: E11A夜战
+  fleet_id: 2
+  battle_count: 40
+  reuse_daily_settings: False
   bonus_check_interval: 1800
+use_quick_repair: False

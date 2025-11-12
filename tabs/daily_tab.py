@@ -1,9 +1,9 @@
 import os
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QApplication,
-    QTableWidgetItem, QHeaderView, QPushButton, QLabel, QSizePolicy, QLineEdit
+    QWidget, QVBoxLayout, QHBoxLayout, QApplication,
+    QTableWidgetItem, QPushButton, QLabel, QLineEdit
 )
-from PySide6.QtCore import Qt, Signal, QEvent, Slot
+from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QIntValidator
 from ruamel.yaml.comments import CommentedSeq
 
@@ -11,7 +11,8 @@ from tabs.components.check_box import CustomCheckBox
 from tabs.components.spin_box import CustomSpinBox
 from tabs.components.combo_box import CustomComboBox
 from tabs.components.base_task_tab import BaseTaskTab
-from utils.ui_utils import create_form_layout, create_group, ConfirmButtonManager
+from tabs.components.managed_list_widget import ManagedListWidget
+from utils.ui_utils import create_form_layout, create_group, create_ok_cancel_buttons
 from utils.config_utils import update_config_value, save_config
 from constants import BATTLE_TYPES
 
@@ -31,12 +32,10 @@ class DailyTab(BaseTaskTab):
 
         # 状态变量
         self.normal_plans_dir = None
-        self.currently_selected_row = -1
         self.edit_mode = None
         self.editing_row_index = -1
 
         self._setup_ui()
-        self.remove_button_manager = ConfirmButtonManager(self.remove_task_btn)
         self._connect_signals()
         self._load_data_to_ui()
         QApplication.instance().installEventFilter(self)
@@ -82,21 +81,19 @@ class DailyTab(BaseTaskTab):
         self.quick_repair_limit_input.setPlaceholderText("0")
         self.stop_max_ship_cb = CustomCheckBox("捞到每日最大掉落时停止")
         self.stop_max_loot_cb = CustomCheckBox("捞到每日最大胖次时停止")
-
-        # 左侧设置表单布局
         daily_settings_layout = create_form_layout([
-            (self.auto_expedition_cb, "定时检查远征并自动收取"),
-            (self.auto_gain_bonus_cb, "有任务奖励时自动领取"),
-            (self.auto_bath_repair_cb, "在无其他任务时自动修理破损舰船"),
-            (self.auto_set_support_cb, "出征前自动设置战役支援"),
-            (self.auto_battle_cb, "根据战役类型自动进行每日战役"),
-            ((QLabel("战役选择:"), self.battle_type_combo), "选择每日战役的类型"),
-            (self.auto_exercise_cb, "自动进行演习"),
-            ((QLabel("演习出征舰队:"), self.exercise_fleet_id_spin), "选择用于演习的舰队编号"),
-            (self.auto_normal_fight_cb, "根据右侧任务列表自动出征"),
-            ((QLabel("快修消耗上限:"), self.quick_repair_limit_input), "设置自动使用快速修理的最大数量，0为无上限"),
-            (self.stop_max_ship_cb, "当捞取达到每日舰船掉落上限时停止挂机"),
-            (self.stop_max_loot_cb, "当捞取达到每日胖次掉落上限时停止挂机")
+            {'widget': self.auto_expedition_cb, 'description': "定时检查远征并自动收取"},
+            {'widget': self.auto_gain_bonus_cb, 'description': "有任务奖励时自动领取"},
+            {'widget': self.auto_bath_repair_cb, 'description': "在无其他任务时自动修理破损舰船"},
+            {'widget': self.auto_set_support_cb, 'description': "出征前自动设置战役支援"},
+            {'widget': self.auto_battle_cb, 'description': "根据战役类型自动进行每日战役"},
+            {'widget': (QLabel("战役选择:"), self.battle_type_combo), 'description': "选择每日战役的类型"},
+            {'widget': self.auto_exercise_cb, 'description': "自动进行演习"},
+            {'widget': (QLabel("演习出征舰队:"), self.exercise_fleet_id_spin), 'description': "选择用于演习的舰队编号"},
+            {'widget': self.auto_normal_fight_cb, 'description': "根据右侧任务列表自动出征"},
+            {'widget': (QLabel("快修消耗上限:"), self.quick_repair_limit_input), 'description': "设置自动使用快速修理的最大数量，0为无上限"},
+            {'widget': self.stop_max_ship_cb, 'description': "当捞取达到每日舰船掉落上限时停止挂机"},
+            {'widget': self.stop_max_loot_cb, 'description': "当捞取达到每日胖次掉落上限时停止挂机"}
         ])
         left_layout.addWidget(create_group("日常挂机设置", daily_settings_layout))
         left_layout.addStretch()
@@ -108,59 +105,26 @@ class DailyTab(BaseTaskTab):
         right_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # 任务列表表格
-        self.tasks_table = QTableWidget()
-        self.tasks_table.setColumnCount(3)
-        self.tasks_table.setHorizontalHeaderLabels(["任务", "出征舰队", "出征次数"])
-        self.tasks_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.tasks_table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
-        self.tasks_table.verticalHeader().setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.tasks_table.setShowGrid(False)
-        self.tasks_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.tasks_table.horizontalHeader().setSectionsClickable(False)
-        self.tasks_table.verticalHeader().setSectionsClickable(False)
-        self.tasks_table.horizontalHeader().setHighlightSections(False)
-        self.tasks_table.verticalHeader().setHighlightSections(False)
-        self.tasks_table.setCornerButtonEnabled(False)
-        self.tasks_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-        self.tasks_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self.list_manager = ManagedListWidget(["任务", "出征舰队", "出征次数"])
+        self.tasks_table = self.list_manager.table
         self.tasks_table.setFixedHeight(260)
+        self.remove_task_btn = self.list_manager.remove_btn
 
-        # 禁止拖动改变选择
-        def ignore_drag_selection(event):
-            if event.buttons() & Qt.MouseButton.LeftButton:
-                return
-            QTableWidget.mouseMoveEvent(self.tasks_table, event)
-        self.tasks_table.mouseMoveEvent = ignore_drag_selection
-
-        # 任务列表操作按钮
-        tasks_buttons_layout = QHBoxLayout()
+        # DailyTab 独有的按钮
         self.add_task_btn = QPushButton("添加任务")
         self.add_task_btn.setCheckable(True)
         self.add_task_btn.setProperty("class", "ShortButton")
         self.edit_task_btn = QPushButton("编辑选中")
         self.edit_task_btn.setCheckable(True)
         self.edit_task_btn.setProperty("class", "ShortButton")
-        self.remove_task_btn = QPushButton("删除选中")
-        self.remove_task_btn.setProperty("class", "ShortButton")
-        self.move_up_btn = QPushButton("上移一行")
-        self.move_up_btn.setProperty("class", "ShortButton")
-        self.move_down_btn = QPushButton("下移一行")
-        self.move_down_btn.setProperty("class", "ShortButton")
-
-        # 添加所有按钮到布局
-        button_list = [
-            self.add_task_btn, self.edit_task_btn,
-            self.move_up_btn, self.move_down_btn, self.remove_task_btn
-        ]
-        for btn in button_list:
-            btn.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-            tasks_buttons_layout.addWidget(btn)
+        # 在最前面插入 Add 和 Edit 按钮
+        self.list_manager.button_layout.insertWidget(0, self.add_task_btn)
+        self.list_manager.button_layout.insertWidget(1, self.edit_task_btn)
 
         # 任务列表组装
         task_list_content_layout = QVBoxLayout()
         task_list_content_layout.setContentsMargins(0, 0, 0, 0)
-        task_list_content_layout.addWidget(self.tasks_table)
-        task_list_content_layout.addLayout(tasks_buttons_layout)
+        task_list_content_layout.addWidget(self.list_manager)
         self.task_list_group = create_group("自定义任务列表", task_list_content_layout)
         right_layout.addWidget(self.task_list_group)
 
@@ -174,9 +138,9 @@ class DailyTab(BaseTaskTab):
         self.count_validator = QIntValidator(1, 99999)
         self.count_input.setValidator(self.count_validator)
         editor_items_info = [
-            ((QLabel("任务:"), self.task_file_combo), None),
-            ((QLabel("出征舰队:"), self.fleet_spinbox), None),
-            ((QLabel("出征次数:"), self.count_input), None)
+            {'widget': (QLabel("任务:"), self.task_file_combo)},
+            {'widget': (QLabel("出征舰队:"), self.fleet_spinbox)},
+            {'widget': (QLabel("出征次数:"), self.count_input)}
         ]
         form_layout = create_form_layout(editor_items_info, column_stretches=(1, 1))
 
@@ -185,11 +149,8 @@ class DailyTab(BaseTaskTab):
         edit_module_content_layout.setContentsMargins(0, 0, 0, 0)
         module_buttons_layout = QHBoxLayout()
         module_buttons_layout.addStretch()
-        self.ok_button = QPushButton("确定")
-        self.ok_button.setProperty("class", "OkCancelButton")
-        self.cancel_button = QPushButton("取消")
-        self.cancel_button.setProperty("class", "OkCancelButton")
-        module_buttons_layout.addWidget(self.ok_button)
+        self.confirm_button, self.cancel_button = create_ok_cancel_buttons()
+        module_buttons_layout.addWidget(self.confirm_button)
         module_buttons_layout.addWidget(self.cancel_button)
         edit_module_content_layout.addLayout(form_layout)
         edit_module_content_layout.addLayout(module_buttons_layout)
@@ -210,53 +171,38 @@ class DailyTab(BaseTaskTab):
         """连接所有 UI 控件的信号到对应的处理函数"""
         # 日常自动化设置信号
         self.auto_expedition_cb.toggled.connect(
-            lambda checked: self._handle_value_change("daily_automation.auto_expedition", checked)
-        )
+            lambda checked: self._handle_value_change("daily_automation.auto_expedition", checked))
         self.auto_gain_bonus_cb.toggled.connect(
-            lambda checked: self._handle_value_change("daily_automation.auto_gain_bonus", checked)
-        )
+            lambda checked: self._handle_value_change("daily_automation.auto_gain_bonus", checked))
         self.auto_bath_repair_cb.toggled.connect(
-            lambda checked: self._handle_value_change("daily_automation.auto_bath_repair", checked)
-        )
+            lambda checked: self._handle_value_change("daily_automation.auto_bath_repair", checked))
         self.auto_set_support_cb.toggled.connect(
-            lambda checked: self._handle_value_change("daily_automation.auto_set_support", checked)
-        )
+            lambda checked: self._handle_value_change("daily_automation.auto_set_support", checked))
         self.auto_battle_cb.toggled.connect(
-            lambda checked: self._handle_value_change("daily_automation.auto_battle", checked)
-        )
+            lambda checked: self._handle_value_change("daily_automation.auto_battle", checked))
         self.battle_type_combo.currentTextChanged.connect(
-            lambda text: self._handle_value_change('daily_automation.battle_type', text)
-        )
+            lambda text: self._handle_value_change('daily_automation.battle_type', text))
         self.auto_exercise_cb.toggled.connect(
-            lambda checked: self._handle_value_change("daily_automation.auto_exercise", checked)
-        )
+            lambda checked: self._handle_value_change("daily_automation.auto_exercise", checked))
         self.exercise_fleet_id_spin.valueChanged.connect(
-            lambda val: self._handle_value_change("daily_automation.exercise_fleet_id", val)
-        )
+            lambda val: self._handle_value_change("daily_automation.exercise_fleet_id", val))
         self.auto_normal_fight_cb.toggled.connect(
-            lambda checked: self._handle_value_change("daily_automation.auto_normal_fight", checked)
-        )
+            lambda checked: self._handle_value_change("daily_automation.auto_normal_fight", checked))
         self.quick_repair_limit_input.editingFinished.connect(self._save_quick_repair_limit)
         self.stop_max_ship_cb.toggled.connect(
-            lambda checked: self._handle_value_change("daily_automation.stop_max_ship", checked)
-        )
+            lambda checked: self._handle_value_change("daily_automation.stop_max_ship", checked))
         self.stop_max_loot_cb.toggled.connect(
-            lambda checked: self._handle_value_change("daily_automation.stop_max_loot", checked)
-        )
+            lambda checked: self._handle_value_change("daily_automation.stop_max_loot", checked))
 
         # 任务管理按钮信号
         self.add_task_btn.clicked.connect(self._on_add_task_clicked)
         self.edit_task_btn.clicked.connect(self._on_edit_task_clicked)
-        self.move_up_btn.clicked.connect(self._on_move_task_up)
-        self.move_down_btn.clicked.connect(self._on_move_task_down)
-        self.remove_button_manager.confirmed_click.connect(self._remove_task_row)
-
-        # 表格交互信号
-        self.tasks_table.cellClicked.connect(self._handle_cell_click)
-        self.tasks_table.itemSelectionChanged.connect(self._on_selection_changed)
-
+        # 连接到 list_manager 的信号
+        self.list_manager.item_moved.connect(self._on_task_moved)
+        self.list_manager.item_removed.connect(self._on_task_removed)
+        self.list_manager.selection_changed.connect(self._on_selection_changed)
         # 编辑模块按钮信号
-        self.ok_button.clicked.connect(self._on_accept_edit)
+        self.confirm_button.clicked.connect(self._on_accept_edit)
         self.cancel_button.clicked.connect(self._on_cancel_edit)
 
     def _load_task_files_to_combo(self):
@@ -310,12 +256,15 @@ class DailyTab(BaseTaskTab):
 
     def populate_tasks_table(self, tasks):
         """将任务列表数据填充到表格中"""
-        self.tasks_table.setRowCount(len(tasks))
+        items_list = []
         for row, task in enumerate(tasks or []):
+            row_items = []
             for col, item_data in enumerate(task):
                 item = QTableWidgetItem(str(item_data))
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.tasks_table.setItem(row, col, item)
+                row_items.append(item)
+            items_list.append(row_items)
+        self.list_manager.set_table_data(items_list)
 
     def _handle_value_change(self, path, value):
         """统一处理配置值的更新和保存，并处理可能发生的错误"""
@@ -330,7 +279,6 @@ class DailyTab(BaseTaskTab):
         text = self.quick_repair_limit_input.text()
         value_to_save = None
         display_text = "0"
-
         if text and text != "0":
             try:
                 num_value = int(text)
@@ -342,7 +290,6 @@ class DailyTab(BaseTaskTab):
         
         if self.quick_repair_limit_input.text() != display_text:
             self.quick_repair_limit_input.setText(display_text)
-
         self._handle_value_change("daily_automation.quick_repair_limit", value_to_save)
 
 
@@ -350,11 +297,7 @@ class DailyTab(BaseTaskTab):
         """事件过滤器，重置删除按钮的二次确认状态"""
         if not self.isVisible():
             return super().eventFilter(watched, event)
-        if event.type() == QEvent.Type.MouseButtonPress:
-            if self.remove_button_manager.is_confirming():
-                clicked_widget = QApplication.widgetAt(event.globalPosition().toPoint())
-                if clicked_widget != self.remove_task_btn:
-                    self.remove_button_manager.reset_state()
+        self.list_manager.process_global_event(event)
         return super().eventFilter(watched, event)
 
     @Slot()
@@ -369,9 +312,7 @@ class DailyTab(BaseTaskTab):
 
         daily_automation = self.settings_data.get('daily_automation', {})
         current_tasks = daily_automation.get('normal_fight_tasks', [])
-
-        if not current_tasks:
-            return
+        if not current_tasks: return
 
         # 筛选出有效的任务
         validated_tasks = []
@@ -419,46 +360,31 @@ class DailyTab(BaseTaskTab):
         self.count_input.setText(str(count))
         self.editing_row_index = row
 
-    def _handle_cell_click(self, row, column):
-        """处理表格单击，实现选中/取消选中切换"""
-        if row == self.currently_selected_row:
-            self.tasks_table.blockSignals(True)
-            self.tasks_table.clearSelection()
-            self.tasks_table.blockSignals(False)
-            self.currently_selected_row = -1
-            self._reset_to_view_mode()
-            self._update_task_buttons_state()
-        else:
-            self.currently_selected_row = row
-
-    def _on_selection_changed(self):
+    def _on_selection_changed(self, current_row: int):
         """响应表格选择变化，更新 UI 状态"""
-        selected_rows = self.tasks_table.selectionModel().selectedRows()
-        if not selected_rows:
-            self.currently_selected_row = -1
+        if current_row == -1:
             self._reset_to_view_mode()
         else:
-            current_row = selected_rows[0].row()
             if self.edit_mode == 'add':
                 self._reset_to_view_mode()
+                # 让 list_manager 取消选择
+                self.list_manager.clear_selection() 
+                return # 避免重复逻辑
             elif self.edit_task_module.isVisible() and self.edit_mode == 'edit':
                 self._load_task_data_to_editor(current_row)
         self._update_task_buttons_state()
 
     def _update_task_buttons_state(self):
-        """根据是否有行被选中，更新按钮的可用性"""
-        is_item_selected = bool(self.tasks_table.selectedItems())
+        """更新 Add/Edit 按钮的可用性"""
+        is_item_selected = self.list_manager.get_current_row() >= 0
         self.edit_task_btn.setEnabled(is_item_selected)
-        self.remove_task_btn.setEnabled(is_item_selected)
-        self.move_up_btn.setEnabled(is_item_selected)
-        self.move_down_btn.setEnabled(is_item_selected)
 
     def _on_add_task_clicked(self):
         """处理“添加任务”按钮点击，进入“添加”模式"""
         if self.edit_task_module.isVisible() and self.edit_mode == 'add':
             self._reset_to_view_mode()
             return
-        self.tasks_table.clearSelection()
+        self.list_manager.clear_selection()
         self.edit_mode = 'add'
         self.add_task_btn.setChecked(True)
         self.edit_task_btn.setChecked(False)
@@ -472,7 +398,7 @@ class DailyTab(BaseTaskTab):
 
     def _on_edit_task_clicked(self):
         """处理“编辑选中”按钮点击，进入“编辑”模式"""
-        current_row = self.tasks_table.currentRow()
+        current_row = self.list_manager.get_current_row()
         if current_row < 0:
             return
         if self.edit_task_module.isVisible() and self.edit_mode == 'edit' and self.editing_row_index == current_row:
@@ -515,41 +441,28 @@ class DailyTab(BaseTaskTab):
         """处理编辑模块中的“取消”按钮，放弃更改"""
         self._reset_to_view_mode()
 
-    def _remove_task_row(self):
-        """处理“删除选中”按钮点击，包含二次确认"""
-        current_row = self.tasks_table.currentRow()
-        if current_row < 0:
-            return
+    @Slot(int)
+    def _on_task_removed(self, row: int):
+        """响应 list_manager 的 item_removed 信号"""
         current_tasks = self.settings_data['daily_automation']['normal_fight_tasks']
-        del current_tasks[current_row]
+        del current_tasks[row]
         new_value = current_tasks if current_tasks else []
         self._handle_value_change('daily_automation.normal_fight_tasks', new_value)
-        self.populate_tasks_table(current_tasks)
-        self.tasks_table.clearSelection()
+        # 此时选择已自动清除，需要重置编辑模块
+        self._reset_to_view_mode()
 
-    def _on_move_task_up(self):
-        """处理“上移一行”按钮点击"""
-        current_row = self.tasks_table.currentRow()
-        if current_row > 0:
-            current_tasks = self.settings_data['daily_automation']['normal_fight_tasks']
-            current_tasks.insert(current_row - 1, current_tasks.pop(current_row))
-            self._handle_value_change('daily_automation.normal_fight_tasks', current_tasks)
-            self.populate_tasks_table(current_tasks)
-            new_row_index = current_row - 1
-            self.tasks_table.setCurrentCell(new_row_index, 0)
-            self.currently_selected_row = new_row_index
-
-    def _on_move_task_down(self):
-        """处理“下移一行”按钮点击"""
-        current_row = self.tasks_table.currentRow()
-        if 0 <= current_row < self.tasks_table.rowCount() - 1:
-            current_tasks = self.settings_data['daily_automation']['normal_fight_tasks']
-            current_tasks.insert(current_row + 1, current_tasks.pop(current_row))
-            self._handle_value_change('daily_automation.normal_fight_tasks', current_tasks)
-            self.populate_tasks_table(current_tasks)
-            new_row_index = current_row + 1
-            self.tasks_table.setCurrentCell(new_row_index, 0)
-            self.currently_selected_row = new_row_index
+    @Slot(int, int)
+    def _on_task_moved(self, from_row: int, to_row: int):
+        """响应 list_manager 的 item_moved 信号"""
+        current_tasks = self.settings_data['daily_automation']['normal_fight_tasks']
+        current_tasks.insert(to_row, current_tasks.pop(from_row))
+        self._handle_value_change('daily_automation.normal_fight_tasks', current_tasks)
+        
+        # 如果处于编辑模式，更新正在编辑的行索引
+        if self.edit_mode == 'edit':
+            self.editing_row_index = to_row
+            # 重新加载编辑器内容，以防万一
+            self._load_task_data_to_editor(to_row)
 
     def get_start_button(self):
         """返回启动按钮控件"""

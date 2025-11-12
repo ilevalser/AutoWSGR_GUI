@@ -18,23 +18,40 @@ def update_config_value(config_data: dict, path: str, value):
     d[keys[-1]] = value
 
 
-def save_config(yaml_manager: YAML, config_data: dict, file_path):
+def save_config(yaml_manager: YAML, config_data: dict, file_path, key_order: list = None):
     """
-    使用指定的YAML管理器将配置数据保存到文件。
+    使用指定的YAML管理器将配置数据保存到文件，并可选择按指定顺序排序键。
 
     Args:
         yaml_manager (YAML): ruamel.yaml 的实例。
         config_data (dict): 要保存的配置数据。
         file_path: 目标文件的路径 (Path 对象)。
+        key_order (list, optional): 一个包含键字符串的列表。如果提供，
+                                    函数会按照此列表的顺序排列config_data中的键，
+                                    然后再保存。默认为 None，即按原顺序保存。
 
     Raises:
         Exception: 当文件写入失败时抛出异常。
     """
+    data_to_save = config_data
+
+    # 如果提供了键顺序列表，则根据它重建字典
+    if key_order:
+        ordered_data = CommentedMap()
+        # 按照预设顺序拷贝键
+        for key in key_order:
+            if key in config_data:
+                ordered_data[key] = config_data[key]
+        # 拷贝不在预设顺序中的其他键，防止数据丢失
+        for key, value in config_data.items():
+            if key not in ordered_data:
+                ordered_data[key] = value
+        data_to_save = ordered_data
+
     try:
         with open(file_path, 'w', encoding='utf-8') as f:
-            yaml_manager.dump(config_data, f)
+            yaml_manager.dump(data_to_save, f)
     except Exception as e:
-        # 将底层异常向上抛出，由调用方处理
         raise Exception(f"保存配置文件 {file_path.name} 失败: {e}")
 
 def numeric_conversion(text, target_type=int, default_on_error=0, validation_func=None):

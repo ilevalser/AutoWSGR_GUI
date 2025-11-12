@@ -88,18 +88,20 @@ class SettingsTab(QWidget):
         left_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         group1_content = create_form_layout([
-            (self.check_update_cb, "启动任务前自动更新AutoWSGR"),
-            (self.debug_cb, "启用后会输出更详细的日志信息"),
-            ((self.log_level_label, self.log_level_combo), "推荐使用INFO"),
-            ((self.delay_label, self.delay_input), "脚本延迟时间(s)，若模拟器卡顿可调高<br>默认为1.5s")
+            {'widget': self.check_update_cb, 'description': "启动任务前自动更新AutoWSGR"},
+            {'widget': self.debug_cb, 'description': "启用后会输出更详细的日志信息"},
+            {'widget': (self.log_level_label, self.log_level_combo), 'description': "推荐使用INFO"},
+            {'widget': (self.delay_label, self.delay_input), 'description': "脚本延迟时间(s)，若模拟器卡顿可调高<br>默认为1.5s"}
         ])
+
         group2_content = create_form_layout([
-            ((self.bathroom_feature_label, self.bathroom_feature_count_spin), "共3个：罗马浴室、和风温泉和曲径通幽"),
-            ((self.bathroom_count_label, self.bathroom_count_spin), "购买浴室会送1个，3个浴室共12个")
+            {'widget': (self.bathroom_feature_label, self.bathroom_feature_count_spin), 'description': "共3个：罗马浴室、和风温泉和曲径通幽"},
+            {'widget': (self.bathroom_count_label, self.bathroom_count_spin), 'description': "购买浴室会送1个，3个浴室共12个"}
         ])
+
         group3_content = create_form_layout([
-            ((self.emulator_type_label, self.emulator_type_combo), "选择使用的模拟器类型"),
-            ((self.emulator_name_label, self.emulator_name_input), "模拟器使用多开功能时填写<br>雷电：emulator-xxxx<br>其他模拟器：ip:port"),
+            {'widget': (self.emulator_type_label, self.emulator_type_combo), 'description': "选择使用的模拟器类型"},
+            {'widget': (self.emulator_name_label, self.emulator_name_input), 'description': "模拟器使用多开功能时填写<br>雷电：emulator-xxxx<br>其他模拟器：ip:port"},
         ])
 
         left_layout.addWidget(create_group("AutoWSGR设置", group1_content))
@@ -117,7 +119,10 @@ class SettingsTab(QWidget):
         path_layout.addWidget(self.plan_root_label, 0, 0)
         path_layout.addWidget(self.plan_root_input, 1, 0)
         path_layout.addWidget(self.plan_root_button, 1, 1)
-        settings_input_layout = create_form_layout([((self.settings_data_label, self.settings_data_button), "可以选择user_settings.yaml导入配置")])
+        settings_input_layout = create_form_layout([
+            {'widget': (self.settings_data_label, self.settings_data_button), 'description': "可以选择user_settings.yaml导入配置"}
+        ])
+        
         nested_container = QWidget()
         nested_container.setLayout(settings_input_layout)
         path_layout.addWidget(nested_container, 2, 0, 1, 2)
@@ -126,10 +131,11 @@ class SettingsTab(QWidget):
         right_layout.addWidget(create_group("路径设置", path_layout, (15, 15, 15, 0)))
 
         destroy_content = create_form_layout([
-            (self.dock_full_destroy_cb, "船坞满后自动根据下方黑/白名单设置进行解装"),
-            ((self.destroy_ship_work_mode_label, self.destroy_ship_work_mode_combo),
-             "黑名单：解装选中的船<br>白名单：保留选中的船")
+            {'widget': self.dock_full_destroy_cb, 'description': "船坞满后自动根据下方黑/白名单设置进行解装"},
+            {'widget': (self.destroy_ship_work_mode_label, self.destroy_ship_work_mode_combo),
+             'description': "黑名单：解装选中的船<br>白名单：保留选中的船"}
         ])
+        
         right_layout.addWidget(create_group("解装设置", destroy_content))
 
         unified_content_layout = QVBoxLayout()

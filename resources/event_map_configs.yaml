@@ -1,0 +1,44 @@
+"20250930":
+  H-5:
+    name: 钢铁磨盘(困难)
+    nodes:
+      A:
+        is_start: True
+        pos: [0.0698, 0.4594]
+        connections: [C, E]
+      B:
+        is_start: True
+        pos: [0.2752, 0.1943]
+        connections: [F, G]
+      C:
+        pos: [0.1343, 0.7397]
+        connections: [D]
+      D:
+        pos: [0.2594, 0.9058]
+      E:
+        pos: [0.3088, 0.5583]
+        connections: [I, K]
+      F:
+        pos: [0.5490, 0.1826]
+        connections: [M]
+      G:
+        pos: [0.3917, 0.3746]
+        connections: [K, L]
+      I:
+        pos: [0.4398, 0.7797]
+        connections: [J, K]
+      J:
+        pos: [0.6280, 0.9211]
+      K:
+        pos: [0.5727, 0.6101]
+        connections: [M, O]
+      L:
+        pos: [0.5945, 0.4452]
+        connections: [M]
+      M:
+        pos: [0.7926, 0.3899]
+        connections: [N, O]
+      N:
+        pos: [0.9243, 0.6419]
+      O:
+        pos: [0.8058, 0.8104]

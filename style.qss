@@ -124,6 +124,12 @@ QPushButton:focus {
     border: 1px solid #007ACC;
 }
 
+QPushButton:disabled {
+    background-color: #38383A;
+    color: #888888;
+    border: 1px solid #444444;
+}
+
 /* 2.3 通用输入框 (QLineEdit) */
 QLineEdit {
     background-color: #3E3E42;
@@ -138,10 +144,12 @@ QLineEdit {
 QLineEdit:hover {
     background-color: #4F4F53;
     border: 1px solid #6A6A6A;
+    color: #FFFFFF;
 }
 
 QLineEdit:focus {
     border: 1px solid #007ACC;
+    color: #FFFFFF;
 }
 
 QLineEdit:disabled {
@@ -153,6 +161,7 @@ QLineEdit:disabled {
 QLineEdit::ContentPlaceholder {
     color: #888888;
 }
+
 /* 未选中 + 焦点状态 */
 QPushButton[checkable="true"]:focus {
     border: 1px solid #555555;
@@ -295,13 +304,23 @@ QToolTip {
     font-size: 10pt;
 }
 
+/* 2.7 滚动区域 */
+QScrollArea {
+    background-color: transparent;
+}
+
+QScrollArea::viewport {
+    background-color: transparent;
+}
+
+#ScrollAreaContentContainer {
+    background-color: transparent;
+}
 /* ================================================================== */
 /* ========================= 3. 自定义组件样式 ======================== */
 /* ================================================================== */
 /* 3.2 自定义复选框 (CustomCheckBox) */
 CustomCheckBox {
-    width: 20px;
-    height: 20px;
     background-color: #3E3E42;
     border: 1px solid #555555;
     border-radius: 2px;
@@ -335,6 +354,27 @@ CustomComboBox {
     border: none;
 }
 
+#DisplayText {
+    background: transparent;
+    color: #E0E0E0;
+    border: none;
+    font-size: 14px;
+    padding-left: 1px;
+}
+
+#DisplayText[hovering="true"] {
+    color: #FFFFFF;
+}
+
+#DisplayText:disabled {
+    color: #888888;
+}
+
+#DisplayButton:disabled {
+    background-color: #38383A;
+    border: 1px solid #444444;
+}
+
 #DisplayButton {
     background-color: #3E3E42;
     border: 1px solid #555555;
@@ -348,15 +388,12 @@ CustomComboBox {
 }
 
 #DisplayButton[state="on"] {
+    background-color: #4F4F53;
     border: 1px solid #007ACC;
 }
 
-#DisplayText {
-    background: transparent;
-    color: #E0E0E0;
-    border: none;
-    font-size: 14px;
-    padding-left: 1px;
+#DisplayButton[state="on"] #DisplayText {
+    color: #FFFFFF;
 }
 
 #PopupList {
@@ -418,6 +455,10 @@ QPushButton#SpinBoxDecrButton, QPushButton#SpinBoxIncrButton {
     border: none;
 }
 
+#SpinBoxLineEdit[parentButtonHovered="true"] {
+    color: #FFFFFF;
+}
+
 /* ================================================================== */
 /* ========================= 4. 特定页面/组件样式 ====================== */
 /* ================================================================== */
@@ -468,25 +509,19 @@ QPushButton[class="StartStopButton"][running="true"]:hover {
     border: 1px solid #D73737;
     color: #FFFFFF;
 }
-
 QPushButton[class="StartStopButton"]:disabled {
     background-color: #38383A;
     color: #888888;
     border: 1px solid #444444;
 }
+
 /* 4.3 其他几种类型的按钮 */
 QPushButton[class="TallButton"] {
-    padding: 5px;
+    min-height: 26px;
 }
 
 QPushButton[class="ShortButton"] {
     padding: 3px;
-}
-
-QPushButton[class="ShortButton"]:disabled {
-    background-color: #38383A;
-    color: #888888;
-    border-color: #444444;
 }
 
 QPushButton[class="OkCancelButton"] {
@@ -494,22 +529,25 @@ QPushButton[class="OkCancelButton"] {
     min-height: 20px;
     padding: 3px;
 }
+QPushButton[class="OkCancelButton"][warning="true"] {
+    color: #FFFFFF;
+    background-color: #C03030;
+    border-color: #e28589ff;
+}
 
-QPushButton[class="OkCancelButton"]:disabled {
-    background-color: #38383A;
-    color: #888888;
-    border-color: #444444;
+QPushButton[class="OkCancelButton"][warning="true"]:hover {
+    background-color: #D73737;
 }
 
 /* 4.4 二次确认按钮 */
 QPushButton[confirming="true"] {
     color: #FFFFFF;
-    background-color: #D73737;
-    border-color: #A52A2A;
+    background-color: #C03030;
+    border-color: #e28589ff;
 }
 
 QPushButton[confirming="true"]:hover {
-    background-color: #C03030;
+    background-color: #D73737;
 }
 
 /* 4.5 决战 */
@@ -521,9 +559,7 @@ QLabel#WarningLabel {
     font-size: 18px;
 }
 
-#Level1FleetList,
-#Level2FleetList,
-#FlagshipPriorityList,
+#FleetList,
 #SourceShipsList {
     background-color: #2D2D30; 
     border: 1px solid #555555; 
@@ -533,9 +569,7 @@ QLabel#WarningLabel {
     font-size: 14px;
 }
 
-#Level1FleetList::item,
-#Level2FleetList::item,
-#FlagshipPriorityList::item,
+#FleetList::item,
 #SourceShipsList::item {
     background-color: #3E3E42;
     color: #E0E0E0;
@@ -544,22 +578,22 @@ QLabel#WarningLabel {
     padding: 2px;
 }
 
-#Level1FleetList::item:hover,
-#Level2FleetList::item:hover,
-#FlagshipPriorityList::item:hover,
+#FleetList::item:hover,
 #SourceShipsList::item:hover {
     background-color: #4F4F53;
     border: 1px solid #6A6A6A;
 }
 
-#Level1FleetList,
-#Level2FleetList,
-#FlagshipPriorityList {
+#FleetList {
     padding-top: 2px;
     padding-bottom: 2px;
 }
 #SourceShipsList::item {
     margin: 3px 3px;
+}
+
+#FleetList[class="invalid"] {
+    border: 1px solid #C03030;
 }
 
 #SourceShipsList[customMode="true"]::item:selected {
@@ -573,7 +607,45 @@ QLabel#WarningLabel {
     border: 1px solid #007ACC;
 }
 
-/* 4.6 其他临时或占位符样式 */
+/* 4.6 编辑计划页面*/
+#MapPlaceholder {
+    border: 1px solid #555555;
+    border-radius: 5px;
+}
+
+#fleet_display {
+    max-height: 26px;
+    background-color: #2D2D30; 
+    border: 1px solid #555555; 
+    border-radius: 2px;
+    padding: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    color: #E0E0E0; 
+    font-size: 14px;
+}
+
+#fleet_display::item {
+    background-color: #3E3E42;
+    color: #E0E0E0;
+    border: 1px solid #555555;
+    border-radius: 2px;
+    padding: 2px;
+}
+
+#Dialog {
+    background-color: #2D2D30; 
+    border: 1px solid #555555;
+    border-radius: 5px;
+}
+
+/* 4.7 其他样式 */
+/* 用于 enemy_rules_dialog.py 的 StagingList */
+#StagingList[class="invalid"] {
+    border: 1px solid red; /* */
+}
+
+
 #ContentPlaceholder {
     color: #E0E0E0;
     font-size: 50px;

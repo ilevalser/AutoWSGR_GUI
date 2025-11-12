@@ -30,7 +30,6 @@ class BaseTaskTab(QWidget):
         """由外部调用，用于控制按钮的可用状态和提示文本"""
         button = self.get_start_button()
         button.setEnabled(enabled)
-        button.setToolTip(tooltip)
 
     def get_start_button(self) -> QPushButton:
         """子类需要返回其用于启动/停止的按钮实例"""

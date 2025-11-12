@@ -78,9 +78,9 @@ class DecisiveBattleTab(BaseTaskTab):
         self.repair_level_combo.addItems(["中破修", "大破修"])
 
         params_layout = create_form_layout([
-            ((QLabel("出击次数:"), self.sortie_count_spin), "设置决战的出击次数"),
-            ((QLabel("决战章节:"), self.chapter_spin), "选择要进行的决战章节，仅支持4、5和6"),
-            ((QLabel("维修策略:"), self.repair_level_combo), "选择舰船在何种状态下进行维修，自动使用快修")
+            {'widget': (QLabel("出击次数:"), self.sortie_count_spin), 'description': "设置决战的出击次数"},
+            {'widget': (QLabel("决战章节:"), self.chapter_spin), 'description': "选择要进行的决战章节，仅支持4、5和6"},
+            {'widget': (QLabel("维修策略:"), self.repair_level_combo), 'description': "选择舰船在何种状态下进行维修，自动使用快修"}
         ])
         left_layout.addWidget(create_group("决战任务设置", params_layout))
 
@@ -88,26 +88,31 @@ class DecisiveBattleTab(BaseTaskTab):
         self.full_destroy_cb = CustomCheckBox("船坞满时解装")
         self.useful_skill_cb = CustomCheckBox("充分利用教官技能")
         self.useful_skill_strict_cb = CustomCheckBox("严格利用教官技能")
+        self.no_quick_repair_cb = CustomCheckBox("不使用快速修理")
 
         other_settings_layout = create_form_layout([
-            (
-                self.full_destroy_cb,
-                "此设置独立于“全局设置”中的“船坞满时解装”,仅在决战生效<br>解装模式及黑白名单依旧生效"
-            ),
-            (
-                self.useful_skill_cb,
-                "开启后在第1小关时，随机到的必须为一二级舰队中的船<br>其余地图至少一半的船为一级舰队中的船"
-            ),
-            (
-                self.useful_skill_strict_cb,
-                "只能在“充分利用教官技能”启用时勾选<br>开启后在第1小关时，教官技能不能获取+1强化的船"
-            )
+            {
+                'widget': self.full_destroy_cb,
+                'description': "此设置独立于“全局设置”中的“船坞满时解装”,仅在决战生效<br>解装模式及黑白名单依旧生效"
+            },
+            {
+                'widget': self.useful_skill_cb,
+                'description': "开启后在第1小关时，随机到的必须为一二级舰队中的船<br>其余地图至少一半的船为一级舰队中的船"
+            },
+            {
+                'widget': self.useful_skill_strict_cb,
+                'description': "只能在“充分利用教官技能”启用时勾选<br>开启后在第1小关时，教官技能不能获取+1强化的船"
+            },
+            {
+                'widget': self.no_quick_repair_cb,
+                'description': "只使用澡堂，自然等待修理完成（利用task功能）"
+            }
         ])
         left_layout.addWidget(create_group("其他设置", other_settings_layout))
         left_layout.addStretch()
 
         # 右侧面板（舰队配置）
-        custom_ships = self.ui_configs_data.get('custom_ss_names', [])
+        custom_ships = self.ui_configs_data.get('custom_names', [])
         initial_custom_ships = [str(item) for item in custom_ships] if isinstance(custom_ships, (list, CommentedSeq)) else []
         self.fleet_config_controller = FleetConfigWidget(initial_custom_ships, self)
 
@@ -153,6 +158,11 @@ class DecisiveBattleTab(BaseTaskTab):
                 self.settings_data, self.settings_path, "decisive_battle.useful_skill_strict", checked
             )
         )
+        self.no_quick_repair_cb.toggled.connect(
+            lambda checked: self._handle_value_change(
+                self.ui_configs_data, self.ui_configs_path, "use_quick_repair", not checked
+            )
+        )
         # 舰队配置信号
         self.fleet_config_controller.level1_fleet_changed.connect(
             lambda data: self._save_list_to_config(self.settings_data, self.settings_path, "decisive_battle.level1", data, style='flow')
@@ -164,7 +174,7 @@ class DecisiveBattleTab(BaseTaskTab):
             lambda data: self._save_list_to_config(self.settings_data, self.settings_path, "decisive_battle.flagship_priority", data, style='flow')
         )
         self.fleet_config_controller.custom_ships_changed.connect(
-            lambda data: self._save_list_to_config(self.ui_configs_data, self.ui_configs_path, "custom_ss_names", data, style='block')
+            lambda data: self._save_list_to_config(self.ui_configs_data, self.ui_configs_path, "custom_names", data, style='block')
         )
         self.fleet_config_controller.log_message_signal.connect(self.log_message_signal.emit)
 
@@ -197,6 +207,8 @@ class DecisiveBattleTab(BaseTaskTab):
     def _load_data_to_ui(self):
         """从配置数据加载初始值到UI控件"""
         self.sortie_count_spin.setValue(self.ui_configs_data.get('sortie_times', 1))
+        use_quick_repair = self.ui_configs_data.get('use_quick_repair', True)
+        self.no_quick_repair_cb.setChecked(not use_quick_repair)
         decisive = self.settings_data.get('decisive_battle', {})
         self.chapter_spin.setValue(decisive.get('chapter', 6))
         self.repair_level_combo.setCurrentIndex(decisive.get('repair_level', 2) - 1)
@@ -278,4 +290,7 @@ class DecisiveBattleTab(BaseTaskTab):
     def get_script_args(self) -> list:
         """返回需要传递给脚本的参数列表"""
         sortie_count = str(self.sortie_count_spin.value())
-        return [sortie_count]
+        args = [sortie_count]
+        if self.no_quick_repair_cb.isChecked():
+            args.append('--use-task-runner')
+        return args

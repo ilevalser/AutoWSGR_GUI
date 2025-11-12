@@ -78,12 +78,12 @@ class EventTab(BaseTaskTab):
 
         # 活动设置布局
         event_settings_layout = create_form_layout([
-            ((QLabel("选择活动:"), self.event_folder_combo), "选择具体活动，以日期区分"),
-            ((QLabel("选择任务:"), self.event_task_combo), "选择具体的任务计划"),
-            ((QLabel("出征舰队:"), self.fleet_id_spin), "选择出征的舰队编号"),
-            ((QLabel("战斗次数:"), self.battle_count_input), "执行任务计划的战斗次数<br>默认100，范围[1, 999]"),
-            (self.reuse_daily_settings_cb, "复用日常中的自动开启战役支援和500船上限设置"),
-            ((QLabel("检查远征间隔:"), self.bonus_check_interval_input), "远征的检查间隔时间(s)<br>默认1800，范围[300, 99999]"),
+            {'widget': (QLabel("选择活动:"), self.event_folder_combo), 'description': "选择具体活动，以日期区分"},
+            {'widget': (QLabel("选择任务:"), self.event_task_combo), 'description': "选择具体的任务计划"},
+            {'widget': (QLabel("出征舰队:"), self.fleet_id_spin), 'description': "选择出征的舰队编号"},
+            {'widget': (QLabel("战斗次数:"), self.battle_count_input), 'description': "执行任务计划的战斗次数<br>默认100，范围[1, 999]"},
+            {'widget': self.reuse_daily_settings_cb, 'description': "复用日常中的自动开启战役支援和500船上限设置"},
+            {'widget': (QLabel("检查远征间隔:"), self.bonus_check_interval_input), 'description': "远征的检查间隔时间(s)<br>默认1800，范围[300, 99999]"},
         ])
         left_layout.addWidget(create_group("活动设置", event_settings_layout))
         left_layout.addStretch()

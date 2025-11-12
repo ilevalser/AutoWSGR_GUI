@@ -40,15 +40,31 @@ class CustomComboBox(QPushButton):
         # 全局事件过滤器，用于处理点击外部关闭弹窗的逻辑
         self.global_event_filter = GlobalEventFilter(self, self.list_widget, self._hide_popup)
 
-    # enterEvent 和 leaveEvent 用于手动处理图标变化
+    # enterEvent 和 leaveEvent 用于手动处理内部变化
     def enterEvent(self, event):
         super().enterEvent(event)
+        if not self.isEnabled():
+            return
         self.icon_label.setPixmap(self.arrow_pixmap_hover)
+        self.text_label.setProperty("hovering", True)
+        self.text_label.style().polish(self.text_label)
+
     def leaveEvent(self, event):
         super().leaveEvent(event)
         # 只有在弹窗不可见时，离开才恢复正常图标
+        self.text_label.setProperty("hovering", False)
+        self.text_label.style().polish(self.text_label)
+        # 如果按钮是禁用的，图标逻辑不执行
+        if not self.isEnabled():
+            return
         if not self._popup_visible:
             self.icon_label.setPixmap(self.arrow_pixmap_normal)
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.EnabledChange:
+            is_enabled = self.isEnabled()
+            self.text_label.setEnabled(is_enabled)
 
     def _show_popup(self):
         if self._popup_visible:
@@ -79,6 +95,8 @@ class CustomComboBox(QPushButton):
         self.list_widget.hide()
         self.setProperty("state", "off")
         self.style().polish(self)
+        self.text_label.setProperty("hovering", False)
+        self.text_label.style().polish(self.text_label)
         # 弹窗关闭后，如果鼠标不在按钮上，恢复图标
         if not self.underMouse():
             self.icon_label.setPixmap(self.arrow_pixmap_normal)
@@ -105,6 +123,17 @@ class CustomComboBox(QPushButton):
         self.list_widget.clear()
         self.text_label.setText("---")
         self._current_index = -1
+    def itemText(self, index):
+        try:
+            idx = int(index)
+        except (ValueError, TypeError):
+            return ""
+        if not (0 <= idx < self.count()):
+            return ""
+        item = self.list_widget.item(idx)
+        if item:
+            return item.text()
+        return ""
     def setCurrentIndex(self, index):
         if not (0 <= index < self.count()): return
         self.list_widget.setCurrentRow(index)

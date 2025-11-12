@@ -14,6 +14,7 @@ from tabs.daily_tab import DailyTab
 from tabs.logs_tab import LogTab
 from tabs.decisive_battle_tab import DecisiveBattleTab
 from tabs.event_tab import EventTab
+from tabs.plan_editor_tab import PlanEditorTab
 
 class MainWindow(QMainWindow):
     # 定义不同边缘和角落的常量
@@ -118,6 +119,7 @@ class MainWindow(QMainWindow):
         self.task_tabs["决战"] = self.decisive_battle_tab
         self.event_tab = EventTab(self.settings_data, SETTINGS_FILE, self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
         self.task_tabs["活动"] = self.event_tab
+        self.plan_editor_tab = PlanEditorTab(self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
 
         # 填充内容
         self.populate_content()
@@ -137,7 +139,7 @@ class MainWindow(QMainWindow):
         self.title_bar.close_requested.connect(self.close)
         self.title_bar.double_click_requested.connect(self.maximize_restore)
         self.title_bar.minimize_to_tray_requested.connect(self.minimize_to_tray)
-        self.side_bar.index_changed.connect(self.stacked_widget.setCurrentIndex)
+        self.side_bar.index_changed.connect(self._on_sidebar_index_changed)
 
         # 将所有任务标签页的启动按钮和日志页的快捷启停信号连接到统一的处理器
         for task_name, tab_instance in self.task_tabs.items():
@@ -161,6 +163,25 @@ class MainWindow(QMainWindow):
         # 启用追踪
         QApplication.instance().installEventFilter(self)
 
+    @Slot(int)
+    def _on_sidebar_index_changed(self, new_index):
+        """处理侧边栏切换请求"""
+        current_index = self.stacked_widget.currentIndex()
+        # 如果点击的是当前已激活的按钮，则不执行任何操作
+        if new_index == current_index:
+            return
+        # 检查当前页面是否是 PlanEditorTab
+        current_widget = self.stacked_widget.widget(current_index)
+        if current_widget == self.plan_editor_tab:
+            # 如果是，检查它是否处于未保存状态
+            if not self.plan_editor_tab.can_safely_close_tab():
+                # 阻止切换
+                # 告诉 SideBar 恢复到上一个索引，保持 UI 同步
+                self.side_bar.on_button_clicked(current_index)
+                return
+        # 允许切换
+        self.stacked_widget.setCurrentIndex(new_index)
+
     def populate_content(self):
         """根据PAGES_CONFIG创建选项卡"""
         pages_config = [{"id": "overview", "title": "总览", "icon": "overview",
@@ -172,7 +193,9 @@ class MainWindow(QMainWindow):
                         {"id": "decisive_battle", "title": "决战", "icon": "decisive_battle",
                          "page_factory": lambda: self.decisive_battle_tab},
                         {"id": "event", "title": "活动", "icon": "event",
-                         "page_factory": lambda: self.event_tab},]
+                         "page_factory": lambda: self.event_tab},
+                        {"id": "plan_editor", "title": "编辑计划", "icon": "edit",
+                         "page_factory": lambda: self.plan_editor_tab}]
         
         for config in pages_config:
             page = config["page_factory"]() # 调用工厂函数创建实例
@@ -541,11 +564,10 @@ class MainWindow(QMainWindow):
 
         self.title_bar.start_task_animation(running_task_name)
         self.log_tab.update_for_task_state(True, running_task_name)
-        
-        tooltip = f"'{running_task_name}' 正在运行"
+
         for task_name, tab_instance in self.task_tabs.items():
             if tab_instance is not self.running_task_tab:
-                tab_instance.set_button_enabled(False, tooltip)
+                tab_instance.set_button_enabled(False)
 
     @Slot(str)
     def _on_any_task_finished(self, finished_task_name: str):

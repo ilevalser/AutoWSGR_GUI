@@ -1,0 +1,1407 @@
+chapter1:
+  1-1:
+    name: 母港附近海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.2928, 0.5224]
+        connections: [B, C]
+      B:
+        pos: [0.4053, 0.3306]
+      C:
+        pos: [0.4105, 0.5812]
+
+  1-2:
+    name: 东北防线海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.2632, 0.5059]
+        connections: [C]
+      B:
+        is_start: True
+        pos: [0.3829, 0.6341]
+        connections: [C, D]
+      C:
+        pos: [0.3658, 0.3376]
+      D:
+        pos: [0.5224, 0.7365]
+  
+  1-3:
+    name: 仁州附近海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.3487, 0.5894]
+        connections: [D, E]
+      B:
+        is_start: True
+        pos: [0.4520, 0.8071]
+        connections: [D, E]
+      D:
+        pos: [0.6191, 0.7000]
+        connections: [F]
+      E:
+        pos: [0.4421, 0.3318]
+      F:
+        pos: [0.6566, 0.4012]
+  
+  1-4:
+    name: 深海仁州基地
+    nodes:
+      A:
+        is_start: True
+        pos: [0.5191, 0.7341]
+        connections: [C]
+      B:
+        is_start: True
+        pos: [0.6954, 0.5976]
+        connections: [D]
+      C:
+        pos: [0.3993, 0.6635]
+        connections: [E]
+      D:
+        pos: [0.6388, 0.3176]
+        connections: [F]
+      E:
+        pos: [0.2296, 0.6506]
+      F:
+        pos: [0.4178, 0.3965]
+        connections: [E]
+
+  1-5:
+    name: 乌兰〇托附近水域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.6151, 0.4635]
+
+chapter2:
+  2-1:
+    name: 扶桑西部海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.3421, 0.2459]
+        connections: [C]
+      C:
+        is_start: True
+        pos: [0.4888, 0.3106]
+        connections: [E]
+      E:
+        pso: [0.5789, 0.5565]
+        connections: [F]
+      F:
+        is_start: True
+        pos: [0.5079, 0.8294]
+
+  2-2:
+    name: 扶桑西南海域
+    nodes:
+    A:
+      is_start: True
+      pos: [0.5711, 0.4706]
+    B:
+      is_start: True
+      pos: [0.4138, 0.4424]
+      connections: [E, F]
+    E:
+      pos: [0.4454, 0.6847]
+      connections: [G]
+    F:
+      pos: [0.2513, 0.4212]
+      connections: [H]
+    G:
+      pos: [0.3579, 0.8835]
+    H:
+      pos: [0.2039, 0.1953]
+    
+  2-3:
+    name: 扶桑南部海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.1322, 0.6188]
+        connections: [C, D]
+      B:
+        is_start: True
+        pos: [0.3336, 0.7965]
+        connections: [D, E]
+      C:
+        pos: [0.1961, 0.3800]
+      D:
+        pos: [0.3618, 0.5200]
+        connections: [G]
+      E:
+        pos: [0.5829, 0.8871]
+        connections: [H]
+      G:
+        pos: [0.4763, 0.3788]
+        connections: [J]
+      H:
+        pos: [0.7289, 0.8165]
+      J:
+        pos: [0.7000, 0.3706]
+
+  2-4:
+    name: 深海扶桑基地
+    nodes:
+      A:
+        is_start: True
+        pos: [0.1132, 0.6894]
+        connections: [B, C]
+      B:
+        is_start: True
+        pos: [0.2941, 0.7094]
+        connections: [D, E]
+      C:
+        pos: [0.2474, 0.3671]
+        connections: [I, J]
+      D:
+        pos: [0.4559, 0.5906]
+        connections: [G, J]
+      E:
+        pos: [0.4289, 0.7812]
+        connections: [G, H]
+      G:
+        pos: [0.5954, 0.6976]
+      H:
+        pos: [0.5355, 0.9082]
+      I:
+        pos: [0.5480, 0.2176]
+      J:
+        pos: [0.6382, 0.4000]
+        connections: [L]
+      L:
+        pos: [0.8520, 0.3024]
+
+  2-5:
+    name: 深海前哨核心地区
+    nodes:
+      A:
+        is_start: True
+        pos: [0.2086, 0.1871]
+        connections: [B]
+      B:
+        pos: [0.3500, 0.2800]
+        connections: [D, F, G, I]
+      D:
+        detourable: True
+        pos: [0.4053, 0.4482]
+        connections: [H]
+      F:
+        pos: [0.6737, 0.1224]
+        connections: [J]
+      G:
+        pos: [0.6382, 0.3424]
+        connections: [J]
+      H:
+        detourable: True
+        pos: [0.4842, 0.6047]
+        connections: [K]
+      I:
+        pos: [0.4763, 0.7459]
+        connections: [L, M, N]
+      J:
+        pos: [0.8158, 0.2976]
+      K:
+        detourable: True
+        pos: [0.6342, 0.5200]
+        connections: [O]
+      L:
+        pos: [0.7750, 0.7353]
+      M:
+        pos: [0.6533, 0.8894]
+      N:
+        pos: [0.3053, 0.9188]
+      O:
+        pos: [0.8632, 0.5635]
+
+  2-6:
+    name: 深海前哨北方地区
+    nodes:
+      A:
+        is_start: True
+        pos: [0.1362, 0.5812]
+        connections: [D, G]
+      B:
+        is_start: True
+        pos: [0.3493, 0.9082]
+        connections: [F]
+      D:
+        pos: [0.2941, 0.4847]
+        connections: [G]
+      E:
+        pos: [0.3730, 0.6976]
+        connections: [D, K]
+      F:
+        pos: [0.5395, 0.7447]
+        connections: [K]
+      G:
+        detourable: True
+        pos: [0.3724, 0.1871]
+        connections: [I, J]
+      I:
+        pos: [0.5750, 0.2071]
+        connections: [L]
+      J:
+        pos: [0.5237, 0.3859]
+        connections: [L]
+      K:
+        pos: [0.6579, 0.5047]
+        connections: [M]
+      L:
+        pos: [0.7368, 0.1929]
+      M:
+        pos: [0.8789, 0.5976]
+
+chapter3:
+  3-1:
+    name: 母港南部海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.4520, 0.2024]
+        connections: [B, F]
+      B:
+        pos: [0.3928, 0.3694]
+        connections: [D, G, H]
+      D:
+        pos: [0.6743, 0.4694]
+      F:
+        pos: [0.1921, 0.4718]
+        connections: [H]
+      G:
+        pos: [0.5079, 0.6812]
+      H:
+        pos: [0.2151, 0.7529]
+        connections: [I]
+      I:
+        pos: [0.3895, 0.8541]
+
+  3-2:
+    name: 东南群岛（1）
+    nodes:
+      A:
+        is_start: True
+        pos: [0.8237, 0.4012]
+        connections: [D]
+      B:
+        is_start: True
+        pos: [0.6493, 0.5118]
+        connections: [D, E]
+      C:
+        is_start: True
+        pos: [0.6263, 0.3565]
+        connections: [E]
+      D:
+        pos: [0.7395, 0.5965]
+      E:
+        pos: [0.4842, 0.5682]
+        connections: [G]
+      G:
+        pos: [0.4605, 0.8588]
+
+  3-3:
+    name: 东南群岛（2）
+    nodes:
+      A:
+        is_start: True
+        pos: [0.8237, 0.5400]
+        connections: [C]
+      B:
+        is_start: True
+        pos: [0.7447, 0.4424]
+        connections: [D, E]
+      C:
+        pos: [0.6862, 0.6906]
+        connections: [F, G]
+      D:
+        pos: [0.6191, 0.4624]
+        connections: [G, J]
+      E:
+        pos: [0.4849, 0.2847]
+        connections: [H]
+      F:
+        pos: [0.5638, 0.8718]
+      G:
+        pos: [0.5559, 0.6541]
+        connections: [J]
+      H:
+        pos: [0.3184, 0.4706]
+        connections: [J]
+      J:
+        detourable: True
+        pos: [0.3658, 0.7682]
+        connections: [K]
+      K:
+        pos: [0.1382, 0.7894]
+
+  3-4:
+    name: 星洲海峡
+    nodes:
+      A:
+        is_start: True
+        pos: [0.6895, 0.3776]
+        connections: [B, C]
+      B:
+        pos: [0.6664, 0.6329]
+        connections: [D]
+      C:
+        pos: [0.5638, 0.4647]
+        connections: [D, G, H, I]
+      D:
+        pos: [0.5480, 0.8094]
+      G:
+        pos: [0.3980, 0.6682]
+      H:
+        pos: [0.2164, 0.6118]
+      I:
+        pos: [0.2645, 0.4071]
+        connections: [J]
+      J:
+        pos: [0.1296, 0.2506]
+
+chapter4:
+  4-1:
+    name: 克拉代夫东部海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.6704, 0.4859]
+        connections: [C]
+      B:
+        is_start: True
+        pos: [0.6342, 0.3224]
+        connections: [D]
+      C:
+        pos: [0.6105, 0.6976]
+        connections: [E, F]
+      D:
+        pos: [0.5079, 0.4000]
+        connections: [F, I, J]
+      E:
+        pos: [0.6901, 0.8518]
+      F:
+        pos: [0.4638, 0.5706]
+        connections: [I]
+      I:
+        pos: [0.2711, 0.8541]
+      J:
+        pos: [0.0888, 0.5694]
+
+  4-2:
+   name: 克拉代夫西部海域
+   nodes:
+    A:
+      is_start: True
+      pos: [0.6586, 0.7518]
+      connections: [C]
+    B:
+      is_start: True
+      pos: [0.7928, 0.5129]
+      connections: [D]
+    C:
+      pos: [0.5401, 0.7047]
+      connections: [G, H]
+    D:
+      pos: [0.6658, 0.5682]
+      connections: [C, F]
+    F:
+      pos: [0.5757, 0.3153]
+      connections: [H, I]
+    G:
+      pos: [0.2592, 0.8153]
+    H:
+      pos: [0.4178, 0.4059]
+      connections: [J]
+    I:
+      pos: [0.3349, 0.2000]
+    J:
+      pos: [0.2151, 0.2471]
+
+  4-3:
+    name: 泪之扉附近海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.7842, 0.5000]
+        connections: [C, E]
+      B:
+        is_start: True
+        pos: [0.6500, 0.2529]
+        connections: [F]
+      C:
+        pos: [0.6428, 0.5482]
+        connections: [E, G]
+      E:
+        pos: [0.5086, 0.5212]
+        connections: [G]
+      F:
+        pos: [0.2046, 0.5282]
+      G:
+        pos: [0.3697, 0.5141]
+        connections: [F, H]
+      H:
+        pos: [0.1553, 0.8553]
+
+  4-4:
+    name: 泪之扉防线
+    nodes:
+      A:
+        is_start: True
+        pos: [0.6270, 0.8576]
+        connections: [C, D]
+      B:
+        is_start: True
+        pos: [0.6974, 0.5965]
+        connections: [E]
+      C:
+        pos: [0.3145, 0.8376]
+        connections: [I]
+      D:
+        pos: [0.4408, 0.7941]
+        connections: [K]
+      E:
+        pos: [0.5750, 0.5671]
+        connections: [H, K]
+      H:
+        pos: [0.5480, 0.3012]
+        connections: [K]
+      I:
+        pos: [0.1414, 0.4706]
+        connections: [L]
+      K:
+        pos: [0.2671, 0.3647]
+        connections: [L]
+      L:
+        pos: [0.1322, 0.2247]
+
+chapter5:
+  5-1:
+    name: 塞浦路斯附近海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.7132, 0.7247]
+        connections: [C, D]
+      B:
+        is_start: True
+        pos: [0.8039, 0.3729]
+        connections: [D]
+      C: 
+        pos: [0.5158, 0.8647]
+        connections: [E, F]
+      D:
+        pos: [0.5401, 0.4553]
+        connections: [F, G]
+      E:
+        pos: [0.1178, 0.6812]
+        connections: [H]
+      F:
+        pos: [0.2625, 0.5400]
+        connections: [G, H]
+      G:
+        pos: [0.3579, 0.2012]
+      H:
+        pos: [0.1355, 0.1824]
+
+  5-2:
+    name: 克里特附近海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.7059, 0.8659]
+        connections: [D]
+      B:
+        is_start: True
+        pos: [0.6822, 0.5471]
+        connections: [E]
+      C:
+        is_start: True
+        pos: [0.8796, 0.4412]
+        connections: [F]
+      D:
+        pos: [0.4211, 0.7788]
+        connections: [G, H]
+      E:
+        pos: [0.5046, 0.5341]
+        connections: [H]
+      F:
+        pos: [0.6112, 0.2024]
+        connections: [H, I]
+      G:
+        pos: [0.1855, 0.9012]
+      H:
+        pos: [0.3184, 0.2012]
+        connections: [J]
+      I:
+        pos: [0.3184, 0.2012]
+        connections: [J]
+      J: 
+        pos: [0.0947, 0.2894]
+
+  5-3:
+    name: 马耳他附近海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.7447, 0.6553]
+        connections: [C, E]
+      B:
+        is_start: True
+        pos: [0.6579, 0.2941]
+        connections: [F, G]
+      C:
+        pos: [0.8086, 0.8588]
+      E:
+        pos: [0.5947, 0.8506]
+        connections: [G]
+      F:
+        pos: [0.4974, 0.3518]
+      G:
+        pos: [0.2908, 0.7612]
+        connections: [H]
+      H:
+        pos: [0.1822, 0.4329]
+
+  5-4:
+    name: 直布罗陀东部海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.6421, 0.4847]
+        connections: [C]
+      B:
+        is_start: True
+        pos: [0.5632, 0.1659]
+        connections: [D]
+      C:
+        pos: [0.7217, 0.7659]
+        connections: [E, G]
+      D:
+        pos: [0.3349, 0.3435]
+        connections: [A, G]
+      E:
+        pos: [0.5079, 0.8776]
+      G:
+        pos: [0.2428, 0.7588]
+        connections: [E, H]
+      H:
+        pos: [0.0803, 0.4471]
+
+  5-5:
+    name: 直布罗陀要塞
+    nodes:
+      A:
+        is_start: True
+        pos: [0.8000, 0.8376]
+        connections: [D]
+      B:
+        is_start: True
+        pos: [0.7132, 0.6106]
+        connections: [D, E]
+      C:
+        is_start: True
+        pos: [0.6184, 0.2165]
+        connections: [F]
+      D:
+        pos: [0.5316, 0.8388]
+        connections: [G]
+      E:
+        pos: [0.4849, 0.4694]
+        connections: [F, H]
+      F:
+        pos: [0.4362, 0.2082]
+        connections: [H, I]
+      G:
+        pos: [0.2632, 0.8447]
+        connections: [I]
+      H:
+        pos: [0.2671, 0.5459]
+        connections: [I]
+      I:
+        pos: [0.0888, 0.4176]
+
+chapter6:
+  6-1:
+    name: 洛里昂南部海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.4059, 0.8659]
+        connections: [D]
+      B:
+        is_start: True
+        pos: [0.5487, 0.6541]
+        connections: [E]
+      C:
+        is_start: True
+        pos: [0.6579, 0.6247]
+        connections: [F]
+      D:
+        pos: [0.2395, 0.6812]
+        connections: [G, H]
+      E:
+        detourable: True
+        pos: [0.4053, 0.6824]
+        connections: [D]
+      F:
+        pos: [0.4842, 0.4141]
+        connections: [H, I]
+      G:
+        pos: [0.1414, 0.8800]
+      H:
+        pos: [0.2553, 0.4129]
+        connections: [K]
+      I:
+        pos: [0.4605, 0.2024]
+      K:
+        pos: [0.1441, 0.2776]
+    
+  6-2:
+    name: 英吉利海峡
+    nodes:
+      A:
+        is_start: True
+        pos: [0.0664, 0.4271]
+        connections: [D]
+      B:
+        is_start: True
+        pos: [0.1796, 0.6259]
+        connections: [E, F]
+      C:
+        is_start: True
+        pos: [0.4059, 0.8729]
+        connections: [F]
+      D:
+        pos: [0.2474, 0.3165]
+        connections: [G]
+      E:
+        pos: [0.3270, 0.4565]
+        connections: [G, H]
+      F:
+        pos: [0.5395, 0.6824]
+        connections: [I]
+      G:
+        detourable: True
+        pos: [0.4454, 0.3035]
+        connections: [J]
+      H:
+        detourable: True
+        pos: [0.5072, 0.4988]
+        connections: [I, K]
+      I:
+        pos: [0.7217, 0.5918]
+        connections: [M]
+      J:
+        detourable: True
+        pos: [0.6026, 0.2176]
+        connections: [M]
+      K:
+        pos: [0.6586, 0.3929]
+        connections: [J, L]
+      L:
+        pos: [0.8007, 0.4012]
+        connections: [M]
+      M:
+        pos: [0.8717, 0.1800]
+
+  6-3:
+    name: 斯卡帕湾
+    nodes:
+      A:
+        is_start: True
+        pos: [0.4211, 0.8671]
+        connections: [D]
+      B:
+        is_start: True
+        pos: [0.3020, 0.5412]
+        connections: [E]
+      C:
+        is_start: True
+        pos: [0.1684, 0.5129]
+        connections: [E, F]
+      D:
+        pos: [0.5862, 0.8165]
+        connections: [H]
+      E:
+        pos: [0.4684, 0.4212]
+        connections: [H]
+      F:
+        pos: [0.3586, 0.1835]
+      H:
+        pos: [0.6658, 0.4576]
+        connections: [J]
+      J:
+        pos: [0.8822, 0.2812]
+  
+  6-4:
+    name: 丹麦海峡
+    nodes:
+      A:
+        is_start: True
+        pos: [0.1408, 0.5400]
+        connections: [B, C]
+      B:
+        pos: [0.3934, 0.5424]
+        connections: [D, E, G]
+      C:
+        pos: [0.2474, 0.2929]
+        connections: [F]
+      D:
+        pos: [0.2237, 0.7659]
+      E:
+        pos: [0.4362, 0.8659]
+      F:
+        detourable: True
+        pos: [0.4447, 0.2447]
+        connections: [G, H, I]
+      G:
+        pos: [0.5309, 0.5965]
+        connections: [K]
+      H:
+        pos: [0.6257, 0.4224]
+        connections: [K, L]
+      I:
+        pos: [0.6612, 0.1729]
+      K:
+        pos: [0.6901, 0.8518]
+      L:
+        pos: [0.9421, 0.8082]
+
+chapter7:
+  7-1:
+    name: 比斯开湾
+    nodes:
+      A:
+        is_start: True
+        pos: [0.7461, 0.7812]
+        connections: [C]
+      B:
+        is_start: True
+        pos: [0.6980, 0.3565]
+        connections: [D]
+      C:
+        detourable: True
+        pos: [0.6059, 0.6812]
+        connections: [F, G]
+      D:
+        detourable: True
+        pos: [0.5678, 0.4271]
+        connections: [H]
+      F:
+        pos: [0.4526, 0.8224]
+        connections: [L]
+      G:
+        pos: [0.4533, 0.6118]
+        connections: [I]
+      H:
+        pos: [0.4336, 0.3565]
+        connections: [J ,K]
+      I:
+        pos: [0.3072, 0.5753]
+        connections: [K ,M, N]
+      J:
+        pos: [0.2408, 0.2165]
+      K:
+        pos: [0.2789, 0.3847]
+        connections: [N]
+      L:
+        pos: [0.2836, 0.8576]
+        connections: [M]
+      M:
+        pos: [0.2243, 0.6894]
+      N:
+        pos: [0.0908, 0.5012]
+
+  7-2:
+    name: 马德拉海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.5401, 0.5776]
+        connections: [D, E]
+      B:
+        is_start: True
+        pos: [0.6592, 0.4659]
+        connections: [G]
+      D:
+        pos: [0.4020, 0.6612]
+        connections: [H]
+      E:
+        pos: [0.4770, 0.3376]
+        connections: [H, K]
+      F:
+        is_start: True
+        pos: [0.7921, 0.3953]
+        connections: [G, L]
+      G:
+        pos: [0.6895, 0.2235]
+      H:
+        detourable: True
+        pos: [0.2789, 0.5894]
+        connections: [J ,K]
+      J:
+        pos: [0.1289, 0.6882]
+      K:
+        pos: [0.2632, 0.3024]
+        connections: [M]
+      L:
+        pos: [0.9151, 0.2447]
+      M:
+        pos: [0.1138, 0.2435]
+
+  7-3:
+    name: 亚速尔海域
+    nodes:
+      A:
+        pos: [0.6743, 0.8012]
+        connections: [D]
+      B:
+        is_start: True
+        pos: [0.6895, 0.5588]
+        connections: [A, E]
+      C:
+        is_start: True
+        detourable: True
+        pos: [0.7895, 0.3141]
+        connections: [F, G]
+      D:
+        pos: [0.4961, 0.8788]
+        connections: [H]
+      E:
+        pos: [0.5671, 0.6882]
+        connections: [D,I]
+      F:
+        pos: [0.5875, 0.4612]
+        connections: [I]
+      G:
+        pos: [0.6428, 0.2012]
+        connections: [K, L]
+      H:
+        pos: [0.3342, 0.7882]
+      I:
+        pos: [0.3783, 0.6588]
+        connections: [L]
+      K:
+        pos: [0.5125, 0.1788]
+      L:
+        pos: [0.2164, 0.5176]
+        connections: [N]
+      N:
+        pos: [0.1197, 0.3082]
+  
+  7-4:
+    name: 百慕大三角附近海域
+    nodes:
+      A:
+       is_start: True
+       pos: [0.7921, 0.5329]
+       connections: [C]
+      B:
+        is_start: True
+        pos: [0.7138, 0.1812]
+        connections: [E]
+      C:
+        pos: [0.7204, 0.7024]
+        connections: [D, F]
+      D:
+        detourable: True
+        pos: [0.5796, 0.4341]
+        connections: [B, E, K, L]
+      E: 
+        pos: [0.5197, 0.2365]
+        connections: [D]
+      F:
+        pos: [0.6309, 0.8153]
+        connections: [I]
+      I:
+        pos: [0.4967, 0.8729]
+      K:
+        pos: [0.3493, 0.6541]
+        connections: [M]
+      L:
+        detourable: True
+        pos: [0.3105, 0.3094]
+        connections: [M]
+      M:
+        pos: [0.1783, 0.3129]
+  
+  7-5:
+    name: 百慕大三角防波堤
+    nodes:
+      A:
+        is_start: True
+        pos: [0.8000, 0.7929]
+        connections: [C]
+      B:
+        is_start: True
+        pos: [0.7691, 0.5106]
+        connections: [D, E]
+      C:
+        pos: [0.6579, 0.8576]
+        connections: [G]
+      D:
+        pos: [0.6579, 0.5965]
+        connections: [H]
+      E:
+        pos: [0.6342, 0.3988]
+        connections: [I, J]
+      F:
+        pos: [0.7375, 0.2576]
+      G:
+        detourable: True
+        pos: [0.4684, 0.8776]
+        connections: [K, L]
+      H:
+        pos: [0.5197, 0.6106]
+        connections: [L]
+      I:
+        pos: [0.4803, 0.3012]
+        connections: [L ,O]
+      J:
+        detourable: True
+        pos: [0.5868, 0.1871]
+        connections: [F, M]
+      K:
+        pos: [0.3026, 0.8365]
+        connections: [Q]
+      L:
+        pos: [0.3822, 0.5824]
+        connections: [Q]
+      M:
+        pos: [0.4289, 0.1729]
+        connections: [O]
+      O:
+        detourable: True
+        pos: [0.2434, 0.2294]
+        connections: [Q]
+      Q:
+        pos: [0.0954, 0.4188]
+
+chapter8:
+  8-1:
+    name: 百慕大中心海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.2276, 0.4353]
+        connections: [D]
+      B:
+        is_start: True
+        pos: [0.3224, 0.2329]
+        connections: [E, F]
+      D:
+        pos: [0.4138, 0.5647]
+        connections: [G, H]
+      E:
+        pos: [0.4737, 0.3565]
+        connections: [H]
+      F:
+        pos: [0.5763, 0.2376]
+        connections: [I, J]
+      G:
+        pos: [0.5526, 0.8447]
+        connections: [L]
+      H:
+        pos: [0.6191, 0.6694]
+        connections: [L]
+      I:
+        pos: [0.6553, 0.4365]
+        connections: [H]
+      J:
+        pos: [0.7875, 0.2776]
+      L:
+        pos: [0.8211, 0.7129]
+
+  8-2:
+    name: 百慕大南群岛
+    nodes:
+      A:
+        is_start: True
+        pos: [0.5086, 0.7941]
+        connections: [D]
+      B:
+        is_start: True
+        pos: [0.5158, 0.5424]
+        connections: [E, J]
+      C:
+        is_start: True
+        pos: [0.2151, 0.4706]
+        connections: [F, G]
+      D:
+        pos: [0.6895, 0.7541]
+        connections: [H, I]
+      E:
+        pos: [0.6737, 0.5424]
+        connections: [I]
+      F:
+        pos: [0.3895, 0.2576]
+        connections: [J, K]
+      G:
+        pos: [0.2230, 0.1871]
+      H:
+        pos: [0.8467, 0.8494]
+      I:
+        pos: [0.8230, 0.6259]
+        connections: [M]
+      J:
+        pos: [0.5941, 0.3741]
+        connections: [M]
+      K:
+        pos: [0.5789, 0.1871]
+        connections: [L]
+      L:
+        pos: [0.7526, 0.2176]
+        connections: [M]
+      M:
+        pos: [0.8789, 0.3224]
+
+  8-3:
+    name: 北加勒比海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.8395, 0.3576]
+        connections: [D]
+      B:
+        is_start: True
+        pos: [0.6105, 0.6400]
+        connections: [E, F, G]
+      C:
+        is_start: True
+        pos: [0.7053, 0.4271]
+        connections: [E]
+      D:
+        pos: [0.5632, 0.2176]
+        connections: [H, K]
+      E:
+        pos: [0.4914, 0.4000]
+        connections: [H]
+      F:
+        pos: [0.3882, 0.7388]
+        connections: [I, J]
+      G:
+        pos: [0.4059, 0.5271]
+        connections: [H, I]
+      H:
+        pos: [0.3184, 0.3718]
+        connections: [K, L]
+      I:
+        pos: [0.1763, 0.5682]
+        connections: [L]
+      J:
+        pos: [0.4836, 0.8929]
+      K:
+        pos: [0.2941, 0.1459]
+      L:
+        pos: [0.1441, 0.3012]
+
+  8-4:
+    name: 东部海岸群岛
+    nodes:
+      A:
+        is_start: True
+        pos: [0.7132, 0.2165]
+        connections: [C, D]
+      B:
+        is_start: True
+        pos: [0.8309, 0.5259]
+        connections: [D, E]
+      C:
+        pos: [0.5158, 0.2012]
+        connections: [F, G, H]
+      D:
+        pos: [0.6178, 0.5412]
+        connections: [H ,I]
+      E:
+        pos: [0.8072, 0.8212]
+      F:
+        pos: [0.3178, 0.1729]
+      G:
+        pos: [0.2855, 0.3012]
+        connections: [M]
+      H:
+        pos: [0.4125, 0.4835]
+        connections: [M]
+      I:
+        pos: [0.4605, 0.7235]
+        connections: [K, L]
+      J:
+        pos: [0.5862, 0.8941]
+      K:
+        pos: [0.3493, 0.9353]
+      L:
+        pos: [0.2711, 0.7094]
+        connections: [M]
+      M:
+        pos: [0.1276, 0.5424]
+
+  8-5:
+    name: 地峡海湾
+    nodes:
+      A:
+        is_start: True
+        pos: [0.1763, 0.3706]
+        connections: [D, I]
+      B:
+        is_start: True
+        pos: [0.3033, 0.3976]
+        connections: [D]
+      C:
+        is_start: True
+        pos: [0.3901, 0.8929]
+        connections: [E, F]
+      D:
+        pos: [0.4533, 0.2447]
+        connections: [G]
+      E:
+        pos: [0.4993, 0.5271]
+        connections: [G]
+      F:
+        pos: [0.6020, 0.7235]
+        connections: [H, K, L]
+      G:
+        pos: [0.7059, 0.2318]
+        connections: [J, M]
+      H:
+        pos: [0.7447, 0.4847]
+        connections: [M]
+      I:
+        pos: [0.2730, 0.1447]
+      J:
+        pos: [0.8789, 0.1306]
+      K:
+        pos: [0.8704, 0.7518]
+      L:
+        pos: [0.7684, 0.9212]
+      M:
+        pos: [0.9250, 0.3600]
+
+chapter9:
+  9-1:
+    name: 地峡外海
+    nodes:
+      A:
+        is_start: True
+        pos: [0.2796, 0.1765]
+        connections: [D, E]
+      B:
+        is_start: True
+        pos: [0.2230, 0.4553]
+        connections: [F, G]
+      C:
+        is_start: True
+        pos: [0.1368, 0.6259]
+        connections: [G]
+      D:
+        pos: [0.6414, 0.2153]
+        connections: [L, M]
+      E:
+        pos: [0.5000, 0.3424]
+        connections: [J]
+      F:
+        pos: [0.5000, 0.3424]
+        connections: [I ,J]
+      G:
+        pos: [0.3105, 0.7812]
+        connections: [H ,I]
+      H:
+        pos: [0.4526, 0.9376]
+      I:
+        pos: [0.4993, 0.8400]
+        connections: [O]
+      J:
+        pos: [0.5632, 0.7376]
+        connections: [K]
+      K:
+        pos: [0.6336, 0.3859]
+        connections: [O]
+      L:
+        pos: [0.8000, 0.1318]
+      M:
+        pos: [0.7678, 0.4282]
+        connections: [N ,O]
+      N:
+        pos: [0.9099, 0.6129]
+      O:
+        pos: [0.7678, 0.7835]
+  
+  9-2:
+    name: 大洋南湾
+    nodes:
+      A:
+        is_start: True
+        detourable: True
+        pos: [0.2237, 0.4271]
+        connections: [D, E]
+      B:
+        is_start: True
+        pos: [0.2632, 0.2588]
+        connections: [E]
+      C:
+        is_start: True
+        pos: [0.2079, 0.1165]
+        connections: [E, F]
+      D:
+        detourable: True
+        pos: [0.3816, 0.5706]
+        connections: [G, H]
+      E:
+        pos: [0.4599, 0.3588]
+        connections: [H, K]
+      F:
+        pos: [0.4053, 0.1318]
+        connections: [I]
+      G:
+        detourable: True
+        pos: [0.4599, 0.8518]
+        connections: [H]
+      H:
+        detourable: True
+        pos: [0.5868, 0.5847]
+        connections: [M]
+      I:
+        detourable: True
+        pos: [0.5704, 0.1741]
+        connections: [J ,K]
+      J:
+        pos: [0.7914, 0.1871]
+      K:
+        pos: [0.7204, 0.3718]
+      M:
+        detourable: True
+        pos: [0.7125, 0.8094]
+        connections: [O]
+      O:
+        pos: [0.8796, 0.5588]
+
+  9-3:
+    name: 南入海口海域
+    nodes:
+      A:
+        is_start: True
+        pos: [0.5164, 0.1318]
+        connections: [D]
+      B:
+        is_start: True
+        pos: [0.4441, 0.5259]
+        connections: [I]
+      C:
+        is_start: True
+        pos: [0.5868, 0.3282]
+        connections: [I ,K]
+      D:
+        pos: [0.6895, 0.1471]
+        connections: [F, G]
+      F:
+        pos: [0.8704, 0.2718]
+        connections: [J]
+      G:
+        pos: [0.7757, 0.3988]
+        connections: [J ,K]
+      I:
+        pos: [0.6184, 0.6376]
+        connections: [N]
+      J:
+        pos: [0.9579, 0.5835]
+        connections: [L]
+      K:
+        pos: [0.7447, 0.6953]
+        connections: [N]
+      L:
+        pos: [0.8862, 0.8212]
+      N:
+        pos: [0.5546, 0.8929]
+        connections: [O]
+      O:
+        pos: [0.3184, 0.8553]
+  
+  9-4:
+    name: 河口外海
+    nodes:
+      A:
+        is_start: True
+        pos: [0.8237, 0.4141]
+        connections: [C, D]
+      B:
+        is_start: True
+        pos: [0.6895, 0.2306]
+        connections: [D, E]
+      C:
+        detourable: True
+        pos: [0.8388, 0.7106]
+        connections: [G]
+      D:
+        detourable: True
+        pos: [0.6730, 0.5388]
+        connections: [G]
+      E:
+        detourable: True
+        pos: [0.5704, 0.4141]
+        connections: [H, I, J]
+      G:
+        pos: [0.5625, 0.8224]
+        connections: [K]
+      H:
+        pos: [0.4842, 0.6812]
+        connections: [K, L]
+      I:
+        pos: [0.3974, 0.4694]
+        connections: [L]
+      J:
+        pos: [0.4046, 0.3565]
+      K:
+        pos: [0.3816, 0.9224]
+        connections: [O]
+      L:
+        pos: [0.2783, 0.6247]
+        connections: [O]
+      O:
+        pos: [0.0961, 0.7682]
+  
+  9-5:
+    name: 南大洋群岛
+    nodes:
+      A:
+        is_start: True
+        pos: [0.7610, 0.2403]
+        connections: [D]
+      B:
+        is_start: True
+        pos: [0.7367, 0.4358]
+        connections: [E, F]
+      C:
+        is_start: True
+        pos: [0.7051, 0.6608]
+        connections: [H]
+      D:
+        pos: [0.5504, 0.1661]
+        connections: [I]
+      E:
+        pos: [0.5635, 0.4217]
+        connections: [J]
+      F:
+        pos: [0.5793, 0.6490]
+        connections: [K]
+      H:
+        pos: [0.5550, 0.8751]
+        connections: [N]
+      I:
+        pos: [0.3502, 0.2250]
+        connections: [J, M]
+      J:
+        pos: [0.4134, 0.4641]
+        connections: [K, O]
+      K:
+        pos: [0.3812, 0.7609]
+        connections: [O]
+      M:
+        pos: [0.2087, 0.3804]
+        connections: [O]
+      N:
+        pos: [0.3660, 0.9317]
+        connections: [O]
+      O:
+        pos: [0.1824, 0.7951]

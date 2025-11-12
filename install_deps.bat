@@ -1,16 +1,16 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: 设置窗口标题
-title AutoWSGR Dependencies Installer
+:: 璁剧疆绐楀彛鏍囬
+title AutoWSGR GUI Dependencies Installer
 
 :: =================================================================
-:: 欢迎信息
+:: 娆㈣繋淇℃伅
 :: =================================================================
 echo.
-echo ===============================================================
-echo ==        AutoWSGR Python Dependencies Installer           ==
-echo ===============================================================
+echo =================================================================
+echo ==        AutoWSGR GUI Python Dependencies Installer           ==
+echo =================================================================
 echo.
 echo This script will install the following required libraries:
 echo   - PySide6
@@ -25,7 +25,7 @@ echo Press any key to start the process...
 pause >nul
 
 :: =================================================================
-:: 核心逻辑：查找正确的 Python 环境
+:: 鏍稿績閫昏緫锛氭煡鎵炬纭殑 Python 鐜
 :: =================================================================
 set "TARGET_PYTHON="
 
@@ -33,7 +33,7 @@ echo.
 echo --- Phase 1: Searching for Python environments using 'py.exe'...
 for /f "tokens=*" %%a in ('py -0p 2^>nul') do (
     set "PYTHON_EXE="
-    :: 这个内部循环是为了获取每行最后一个词，即Python路径
+    :: 杩欎釜鍐呴儴寰幆鏄负浜嗚幏鍙栨瘡琛屾渶鍚庝竴涓瘝锛屽嵆Python璺緞
     for %%b in (%%a) do set "PYTHON_EXE=%%b"
     
     if defined PYTHON_EXE (
@@ -49,7 +49,7 @@ for /f "tokens=*" %%a in ('py -0p 2^>nul') do (
 
 echo.
 echo --- Phase 2: 'py.exe' did not find a suitable environment.
-echo ---          Searching in your system PATH using 'where'...
+echo ---          Searching in your system PATH...
 for /f "delims=" %%i in ('where python 2^>nul') do (
     echo Checking: %%i
     "%%i" -c "import autowsgr" >nul 2>nul
@@ -61,7 +61,7 @@ for /f "delims=" %%i in ('where python 2^>nul') do (
 )
 
 :: =================================================================
-:: 未找到环境的处理
+:: 鏈壘鍒扮幆澧冪殑澶勭悊
 :: =================================================================
 :not_found
 echo.
@@ -76,7 +76,7 @@ echo ===========================================================================
 goto :end
 
 :: =================================================================
-:: 找到环境后，执行安装
+:: 鎵惧埌鐜鍚庯紝鎵ц瀹夎
 :: =================================================================
 :found_python
 if not defined TARGET_PYTHON goto :not_found
@@ -110,7 +110,7 @@ if %errorlevel% equ 0 (
 )
 
 :: =================================================================
-:: 脚本结束
+:: 鑴氭湰缁撴潫
 :: =================================================================
 :end
 echo.

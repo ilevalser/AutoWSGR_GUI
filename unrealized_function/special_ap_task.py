@@ -1,8 +1,9 @@
 import autowsgr.fight.normal_fight as nf
 from autowsgr.scripts.main import start_script
+from constants import SETTINGS_FILE
 
 
-timer = start_script('./user_settings.yaml')
+timer = start_script(SETTINGS_FILE)
 
 
 # 战利品限时任务

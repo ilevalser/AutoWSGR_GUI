@@ -41,10 +41,7 @@ class LogTab(QWidget):
         self.quick_start_stop_button = QPushButton("快捷启动")
         self.quick_start_stop_button.setProperty("class", "StartStopButton")
         self.task_selector_combo = CustomComboBox()
-        task_selector_layout = create_form_layout(
-            [((QLabel("选择任务:"), self.task_selector_combo), "选择要快速启动的任务")],
-            column_stretches=(1, 1)
-        )
+        task_selector_layout = create_form_layout([{'widget': (QLabel("选择任务:"), self.task_selector_combo), 'description': "选择要快速启动的任务"}], column_stretches=(1, 1))
         quick_start_layout = QVBoxLayout()
         quick_start_layout.addWidget(self.quick_start_stop_button)
         quick_start_layout.addLayout(task_selector_layout)
@@ -56,10 +53,7 @@ class LogTab(QWidget):
         self.clear_log_button = QPushButton("清空日志")
         self.clear_log_button.setProperty("class", "StartStopButton")
         self.auto_scroll_checkbox = CustomCheckBox("自动滚动日志")
-        auto_scroll_layout = create_form_layout(
-            [(self.auto_scroll_checkbox, None)],
-            column_stretches=(1, 1)
-        )
+        auto_scroll_layout = create_form_layout([{'widget': self.auto_scroll_checkbox}], column_stretches=(1, 1))
         log_settings_layout = QVBoxLayout()
         log_settings_layout.addWidget(self.clear_log_button)
         log_settings_layout.addLayout(auto_scroll_layout)

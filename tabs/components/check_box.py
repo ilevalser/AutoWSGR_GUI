@@ -21,6 +21,7 @@ class CustomCheckBox(QPushButton):
         self.disabled_icon = QIcon(disabled_pixmap)
         # 设置按钮的图标大小
         self.setIconSize(icon_size)
+        self.setFixedSize(20, 20)
         # 连接信号，当选中状态改变时，更新图标显示
         self.toggled.connect(self.update_icon)
         # 初始化一次图标
@@ -34,6 +35,11 @@ class CustomCheckBox(QPushButton):
         """供 create_form_layout 调用，以清空文本"""
         self._text_storage = text
         super().setText("")
+    
+    def setChecked(self, checked: bool):
+        """重写setChecked，确保在设置状态后总是更新图标，无论信号是否被阻塞。"""
+        super().setChecked(checked)
+        self.update_icon()
 
     def update_icon(self, checked = None):
         """根据选中状态，显示或隐藏图标"""
