@@ -76,6 +76,7 @@ class SettingsTab(QWidget):
         self.settings_data_button = QPushButton("选择文件导入")
         self.settings_data_button.setObjectName("settings_button")
         self.dock_full_destroy_cb = CustomCheckBox("船坞满时解装")
+        self.remove_equipment_cb = CustomCheckBox("解装时取下装备")
         self.destroy_ship_work_mode_label = QLabel("解装模式:")
         self.destroy_ship_work_mode_combo = CustomComboBox()
         self.destroy_mode_items = [("不启用", 0), ("黑名单", 1), ("白名单", 2)]
@@ -87,40 +88,25 @@ class SettingsTab(QWidget):
         left_layout.setContentsMargins(5, 5, 5, 5)
         left_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        group1_content = create_form_layout([
+        gui_content = create_form_layout([
             {'widget': self.check_update_cb, 'description': "启动任务前自动更新AutoWSGR"},
             {'widget': self.debug_cb, 'description': "启用后会输出更详细的日志信息"},
             {'widget': (self.log_level_label, self.log_level_combo), 'description': "推荐使用INFO"},
             {'widget': (self.delay_label, self.delay_input), 'description': "脚本延迟时间(s)，若模拟器卡顿可调高<br>默认为1.5s"}
         ])
 
-        group2_content = create_form_layout([
-            {'widget': (self.bathroom_feature_label, self.bathroom_feature_count_spin), 'description': "共3个：罗马浴室、和风温泉和曲径通幽"},
-            {'widget': (self.bathroom_count_label, self.bathroom_count_spin), 'description': "购买浴室会送1个，3个浴室共12个"}
-        ])
-
-        group3_content = create_form_layout([
+        file_content = create_form_layout([
             {'widget': (self.emulator_type_label, self.emulator_type_combo), 'description': "选择使用的模拟器类型"},
             {'widget': (self.emulator_name_label, self.emulator_name_input), 'description': "模拟器使用多开功能时填写<br>雷电：emulator-xxxx<br>其他模拟器：ip:port"},
         ])
-
-        left_layout.addWidget(create_group("AutoWSGR设置", group1_content))
-        left_layout.addWidget(create_group("修理设置", group2_content))
-        left_layout.addWidget(create_group("模拟器设置", group3_content))
-
-        # 右侧面板
-        right_panel = QWidget()
-        right_layout = QVBoxLayout(right_panel)
-        right_layout.setContentsMargins(5, 5, 5, 5)
-        right_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
+        
         path_layout = QGridLayout()
         path_layout.setContentsMargins(0, 0, 0, 0)
         path_layout.addWidget(self.plan_root_label, 0, 0)
         path_layout.addWidget(self.plan_root_input, 1, 0)
         path_layout.addWidget(self.plan_root_button, 1, 1)
         settings_input_layout = create_form_layout([
-            {'widget': (self.settings_data_label, self.settings_data_button), 'description': "可以选择user_settings.yaml导入配置"}
+            {'widget': (self.settings_data_label, self.settings_data_button), 'description': "可选择user_settings.yaml或ui_configs.yaml导入配置"}
         ])
         
         nested_container = QWidget()
@@ -128,14 +114,26 @@ class SettingsTab(QWidget):
         path_layout.addWidget(nested_container, 2, 0, 1, 2)
         path_layout.setColumnStretch(0, 2)
         path_layout.setColumnStretch(1, 1)
-        right_layout.addWidget(create_group("路径设置", path_layout, (15, 15, 15, 0)))
 
+        left_layout.addWidget(create_group("AutoWSGR设置", gui_content))
+        left_layout.addWidget(create_group("路径设置（⚠<i>重启以应用设置！</i>）", path_layout, (15, 15, 15, 0)))
+        left_layout.addWidget(create_group("模拟器设置", file_content))
+
+        # 右侧面板
+        right_panel = QWidget()
+        right_layout = QVBoxLayout(right_panel)
+        right_layout.setContentsMargins(5, 5, 5, 5)
+        right_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        fix_content = create_form_layout([
+            {'widget': (self.bathroom_feature_label, self.bathroom_feature_count_spin), 'description': "共3个：罗马浴室、和风温泉和曲径通幽"},
+            {'widget': (self.bathroom_count_label, self.bathroom_count_spin), 'description': "购买浴室会送1个，3个浴室共12个"}
+        ])
         destroy_content = create_form_layout([
             {'widget': self.dock_full_destroy_cb, 'description': "船坞满后自动根据下方黑/白名单设置进行解装"},
-            {'widget': (self.destroy_ship_work_mode_label, self.destroy_ship_work_mode_combo),
-             'description': "黑名单：解装选中的船<br>白名单：保留选中的船"}
+            {'widget': self.remove_equipment_cb, 'description': "解装时选中“卸下所有装备”"},
+            {'widget': (self.destroy_ship_work_mode_label, self.destroy_ship_work_mode_combo), 'description': "黑名单：解装选中的船；白名单：保留选中的船"}
         ])
-        
+        right_layout.addWidget(create_group("修理设置", fix_content))
         right_layout.addWidget(create_group("解装设置", destroy_content))
 
         unified_content_layout = QVBoxLayout()
@@ -192,6 +190,7 @@ class SettingsTab(QWidget):
         self.settings_data_button.clicked.connect(self._on_import_settings_clicked)
         self.plan_root_button.clicked.connect(self._on_select_plan_root_clicked)
         self.dock_full_destroy_cb.toggled.connect(lambda v: self._handle_value_change('dock_full_destroy', v))
+        self.remove_equipment_cb.toggled.connect(lambda v: self._handle_value_change('remove_equipment_mode', v))
         self.destroy_ship_work_mode_combo.currentIndexChanged.connect(self._on_destroy_mode_changed)
         self.all_ships_button.clicked.connect(self._on_all_ships_clicked)
         for name, button in self.ship_type_buttons.items():
@@ -216,6 +215,7 @@ class SettingsTab(QWidget):
         self.plan_root_input.setText(plan_root_path or '')
         self._validate_and_save_plan_root(plan_root_path, initial_load=True)
         self.dock_full_destroy_cb.setChecked(self.settings_data.get('dock_full_destroy', False))
+        self.remove_equipment_cb.setChecked(self.settings_data.get('remove_equipment_mode', True))
         work_mode_val = self.settings_data.get('destroy_ship_work_mode', 0)
         mode_index = next(
             (i for i, item in enumerate(self.destroy_mode_items) if item[1] == work_mode_val), 0
@@ -279,7 +279,7 @@ class SettingsTab(QWidget):
         line_edit.style().polish(line_edit)
 
     def _on_import_settings_clicked(self):
-        """打开文件对话框以导入 user_settings.yaml 配置文件。"""
+        """打开文件对话框以导入 user_settings.yaml 或 ui_configs.yaml 配置文件。"""
         start_dir = str(Path(self.settings_path).parent)
         file_path, _ = QFileDialog.getOpenFileName(
             self,
@@ -291,25 +291,30 @@ class SettingsTab(QWidget):
         if file_path:
             try:
                 p = Path(file_path)
+                file_name = p.name  # 获取文件名
+
                 with p.open('r', encoding='utf-8') as f:
                     new_data = self.yaml_manager.load(f)
 
-                if not isinstance(new_data, dict):
-                    print("错误: 配置文件必须是有效的键值对集合。")
+                if not isinstance(new_data, dict): return
+
+                if file_name == 'user_settings.yaml':
+                    new_data['check_update'] = False  # 保留原有逻辑
+                    self.settings_data.clear()
+                    self.settings_data.update(new_data)
+                    save_config(self.yaml_manager, self.settings_data, self.settings_path)
+                    self._load_data_to_ui()  # 重新加载UI
+                    self.plan_root_changed.emit() # user_settings 包含 plan_root
+                elif file_name == 'ui_configs.yaml':
+                    self.configs_data.clear()
+                    self.configs_data.update(new_data)
+                    save_config(self.yaml_manager, self.configs_data, self.configs_path)
+                    self._load_data_to_ui()  # 重新加载UI
+                else:
                     return
 
-                new_data['check_update'] = False
-                self.settings_data.clear()
-                self.settings_data.update(new_data)
-                save_config(self.yaml_manager, self.settings_data, self.settings_path)
-
-                self._load_data_to_ui()
-                self.plan_root_changed.emit()
-
-            except YAMLError as e:
-                print(f"错误: 导入的 YAML 文件格式无效: {e}")
-            except Exception as e:
-                print(f"错误: 导入配置文件时发生未知错误: {e}")
+            except YAMLError as e: return
+            except Exception as e: return
     
     def _on_select_plan_root_clicked(self):
         """打开文件夹对话框以选择方案根目录"""

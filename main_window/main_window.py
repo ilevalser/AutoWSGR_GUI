@@ -113,7 +113,7 @@ class MainWindow(QMainWindow):
         # 初始化页面实例
         self.log_tab = LogTab(self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
         self.settings_tab = SettingsTab(self.settings_data, SETTINGS_FILE, self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
-        self.daily_tab = DailyTab(self.settings_data, SETTINGS_FILE, self.yaml_manager, self)
+        self.daily_tab = DailyTab(self.settings_data, SETTINGS_FILE, self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
         self.task_tabs["日常"] = self.daily_tab
         self.decisive_battle_tab = DecisiveBattleTab(self.settings_data, SETTINGS_FILE, self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
         self.task_tabs["决战"] = self.decisive_battle_tab

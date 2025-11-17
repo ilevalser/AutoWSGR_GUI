@@ -14,7 +14,7 @@ from tabs.components.check_box import CustomCheckBox
 from tabs.components.combo_box import CustomComboBox
 from tabs.components.plan_settings_widget import PlanSettingsWidget
 from tabs.components.node_settings_editor_widget import NodeSettingsEditorWidget
-from tabs.components.new_plan_dialog import NewPlanDialog
+from tabs.components.validation_input_dialog import ValidationInputDialog, PlanValidator
 from constants import SETTINGS_FILE, MAP_PICS_DIR, NORMAL_MAP_CONFIGS_FILE, EVENT_MAP_CONFIGS_FILE, KEY_ORDER_MAP
 from utils.config_utils import save_config, update_config_value
 from utils.ui_utils import create_ok_cancel_buttons, ConfirmButtonManager
@@ -761,10 +761,16 @@ class PlanEditorTab(QWidget):
     def _on_new_plan_clicked(self):
         """处理“新建计划”按钮点击事件。"""
         plan_type = self.root_combo.currentText()
-        dialog = NewPlanDialog(parent=self, save_dir_path=self.current_plan_path_dir)
-        if not dialog.exec():return
+        validator = PlanValidator(Path(self.current_plan_path_dir))
+        dialog = ValidationInputDialog(self, 
+                                     title="新建计划", 
+                                     prompt="请输入文件名:", 
+                                     validator=validator)
+        if not dialog.exec(): return
 
-        full_file_path = dialog.get_confirmed_path()
+        full_file_path = dialog.get_confirmed_value() 
+        if not full_file_path: return
+
         default_data = self._get_default_plan_data(plan_type)
         key_order = KEY_ORDER_MAP.get(plan_type.lower())
         save_config(self.yaml_manager, default_data, full_file_path, key_order=key_order)

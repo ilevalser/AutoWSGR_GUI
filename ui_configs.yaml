@@ -20,3 +20,7 @@ event_automation:
   reuse_daily_settings: False
   bonus_check_interval: 1800
 use_quick_repair: False
+preset_task:
+  胖次:
+    - [7-46SS-all2, 2, 10]
+    - [9-2胖次, 4, 500]

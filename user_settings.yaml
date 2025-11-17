@@ -9,7 +9,7 @@ destroy_ship_types:
   - 轻母
   - 装母
   - 导驱
-
+remove_equipment_mode: True
 bathroom_feature_count: 3
 bathroom_count: 7
 
@@ -26,8 +26,8 @@ daily_automation:
   exercise_fleet_id: 3
   auto_normal_fight: True
   normal_fight_tasks:
-    - [2-1捞胖次, 2, 1]
-    - [6-15SS, 1, 1]
+    - [7-46SS-all2, 2, 10]
+    - [9-2胖次, 4, 500]
   quick_repair_limit:
   stop_max_ship: True
   stop_max_loot: False
