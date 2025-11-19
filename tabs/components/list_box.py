@@ -2,9 +2,9 @@ from PySide6.QtWidgets import QListWidget, QAbstractItemView, QListView
 from PySide6.QtCore import Qt, Signal, QSize
 
 class ListBox(QListWidget):
-    """基础舰船列表控件，支持拖拽、选择、查找等功能。"""
+    """基础舰船列表控件，支持拖拽、选择、查找等功能"""
     def __init__(self, parent=None):
-        """初始化控件，设置拖拽和选择模式。"""
+        """初始化控件，设置拖拽和选择模式"""
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
@@ -14,34 +14,34 @@ class ListBox(QListWidget):
         self._drag_start_on_item = False
 
     def contextMenuEvent(self, event):
-        """禁用右键菜单。"""
+        """禁用右键菜单"""
         pass
 
     def mousePressEvent(self, event):
-        """记录拖拽起点是否在项目上。"""
+        """记录拖拽起点是否在项目上"""
         if event.button() == Qt.MouseButton.LeftButton:
             self._drag_start_on_item = self.itemAt(event.pos()) is not None
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        """禁用空白区域框选。"""
+        """禁用空白区域框选"""
         if event.buttons() & Qt.MouseButton.LeftButton and not self._drag_start_on_item:
             return
         super().mouseMoveEvent(event)
 
     def find_items(self, text):
-        """精确查找项目。"""
+        """精确查找项目"""
         return self.findItems(text, Qt.MatchFlag.MatchExactly)
 
     def startDrag(self, supportedActions):
-        """拖拽操作，支持信号连接。"""
+        """拖拽操作，支持信号连接"""
         drag = super().startDrag(supportedActions)
         if drag:
             drag.finished.connect(self._on_drag_finished)
         return drag
 
     def _on_drag_finished(self, action):
-        """拖拽取消时恢复项目。"""
+        """拖拽取消时恢复项目"""
         if action == Qt.DropAction.IgnoreAction:
             selected = self.selectedItems()
             if selected:
@@ -78,21 +78,21 @@ class BaseSourceList(ListBox):
             item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
 
     def addItem(self, item):
-        """重写 addItem，在添加单个项目后更新尺寸。"""
+        """重写 addItem，在添加单个项目后更新尺寸"""
         super().addItem(item)
         self._update_all_item_sizes()
 
     def addItems(self, labels):
-        """重写 addItems，在添加多个项目后更新尺寸。"""
+        """重写 addItems，在添加多个项目后更新尺寸"""
         super().addItems(labels)
         self._update_all_item_sizes()
 
     def startDrag(self, supportedActions):
-        """拖拽为复制操作。"""
+        """拖拽为复制操作"""
         return super().startDrag(Qt.DropAction.CopyAction)
 
     def dragEnterEvent(self, event):
-        """接受来自目标列表的拖回删除。"""
+        """接受来自目标列表的拖回删除"""
         from_target_list = hasattr(event.source(), '_is_target_list')
         if from_target_list:
             event.acceptProposedAction()
@@ -100,7 +100,7 @@ class BaseSourceList(ListBox):
             event.ignore()
 
     def dropEvent(self, event):
-        """处理从目标列表拖回删除。"""
+        """处理从目标列表拖回删除"""
         source = event.source()
         if hasattr(source, '_is_target_list'):
             # 从目标列表拖回，删除源列表中的对应项目
@@ -154,31 +154,28 @@ class BaseTargetList(ListBox):
             item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
 
     def addItem(self, item):
-        """重写 addItem，在添加后更新尺寸。"""
+        """重写 addItem，在添加后更新尺寸"""
         super().addItem(item)
         self._update_item_sizes()
         
     def addItems(self, labels):
-        """重写 addItems，在添加后更新尺寸。"""
+        """重写 addItems，在添加后更新尺寸"""
         super().addItems(labels)
         self._update_item_sizes()
 
     def dragEnterEvent(self, event):
-        """统一的拖拽进入处理。"""
+        """统一的拖拽进入处理"""
         source = event.source()
-        
         # 接受来自源列表的拖拽
         if isinstance(source, BaseSourceList):
             event.acceptProposedAction()
             return
-            
         # 接受来自同类目标列表的交换（如果允许）
         if (self.allow_same_type_exchange and 
             isinstance(source, BaseTargetList) and 
             source != self):
             event.acceptProposedAction()
             return
-            
         # 接受内部移动（如果允许）
         if self.allow_internal_move and source == self:
             event.acceptProposedAction()
@@ -187,32 +184,28 @@ class BaseTargetList(ListBox):
         event.ignore()
 
     def dropEvent(self, event):
-        """统一的拖放处理。"""
+        """统一的拖放处理"""
         source = event.source()
-        
         # 从源列表复制
         if isinstance(source, BaseSourceList):
             if self._can_accept_from_source(source):
                 self._handle_drop_from_source(source, event)
             else:
-                event.ignore()
-                
+                event.ignore()   
         # 同类目标列表间交换
         elif (self.allow_same_type_exchange and 
               isinstance(source, BaseTargetList) and 
               source != self):
             self._handle_exchange_with_same_type(source, event)
-            
         # 内部移动
         elif self.allow_internal_move and source == self:
             super().dropEvent(event)
             self.contentChanged.emit()
-            
         else:
             event.ignore()
 
     def _can_accept_from_source(self, source):
-        """检查是否可以从源列表接受项目。"""
+        """检查是否可以从源列表接受项目"""
         if self.max_items == 1 and self.count() >= 1:
             return False
             
@@ -235,7 +228,7 @@ class BaseTargetList(ListBox):
         return True
 
     def _handle_drop_from_source(self, source, event):
-        """处理从源列表的拖放，支持智能交换。"""
+        """处理从源列表的拖放，支持智能交换"""
         if not self.enable_smart_swap:
             # 使用默认的拖拽复制逻辑
             item_texts = [item.text() for item in source.selectedItems()]
@@ -265,7 +258,6 @@ class BaseTargetList(ListBox):
                         same_type_lists.append(target_list)
             elif hasattr(parent_widget, 'drop_zones'):
                 same_type_lists = parent_widget.drop_zones
-
         # 对于每个拖拽的项目，检查是否已存在于同类列表中
         for dropped_text in dropped_item_texts:
             # 从所有同类列表中移除重复项
@@ -279,26 +271,29 @@ class BaseTargetList(ListBox):
             # 添加到当前列表（如果不存在）
             if not self.find_items(dropped_text):
                 self.addItem(dropped_text)
-
         event.accept()
         self.contentChanged.emit()
 
     def _handle_exchange_with_same_type(self, source, event):
-        """处理与同类目标列表的交换。"""
+        """处理与同类目标列表的交换"""
         item_texts = [item.text() for item in source.selectedItems()]
         # 检查目标列表是否可以接受这些项目
         for text in item_texts:
             if self.find_items(text):  # 目标列表已存在该项目
                 event.ignore()
                 return
-                
         # 执行交换：从源列表移除，添加到目标列表
         for text in item_texts:
             if items := source.find_items(text):
                 row = source.row(items[0])
                 item = source.takeItem(row)
                 self.addItem(item.text())
-
         event.accept()
         source.contentChanged.emit()
         self.contentChanged.emit()
+    
+    def showEvent(self, event):
+        """当控件显示时重新计算尺寸"""
+        super().showEvent(event)
+        if self.count() > 0:
+            self._update_item_sizes()

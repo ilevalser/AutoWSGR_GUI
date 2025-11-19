@@ -55,7 +55,7 @@ class BaseTaskTab(QWidget):
             args = self.get_script_args()
             if args is None: # 如果获取参数失败，则不启动
                 return
-            self.log_message_signal.emit(f"--- 准备启动脚本: {module_path} ---")
+            self.log_message_signal.emit(f"------------ 准备启动脚本: {module_path} ------------")
             self.task_process.start(sys.executable, ['-um', module_path, *args])
             
     def _on_task_started(self):
@@ -65,7 +65,7 @@ class BaseTaskTab(QWidget):
         button.setText(f"中止{task_name}")
         button.setProperty("running", True)
         button.style().polish(button)
-        self.log_message_signal.emit(f"\n--- {task_name}任务已启动 ---\n")
+        self.log_message_signal.emit(f"\n------------ {task_name}任务已启动 ------------\n")
         self.task_started.emit(task_name)
 
     def _on_task_finished(self):
@@ -75,7 +75,7 @@ class BaseTaskTab(QWidget):
         button.setText(f"启动{task_name}")
         button.setProperty("running", False)
         button.style().polish(button)
-        self.log_message_signal.emit(f"\n--- {task_name}任务已结束 ---\n")
+        self.log_message_signal.emit(f"\n------------ {task_name}任务已结束 ------------\n")
         self.task_finished.emit(task_name)
         
     def _process_output_and_log(self, is_error=False):

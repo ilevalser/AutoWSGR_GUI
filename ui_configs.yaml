@@ -19,8 +19,10 @@ event_automation:
   battle_count: 40
   reuse_daily_settings: False
   bonus_check_interval: 1800
-use_quick_repair: False
+use_quick_repair: True
 preset_task:
   胖次:
     - [7-46SS-all2, 2, 10]
     - [9-2胖次, 4, 500]
+  10把加成:
+    - [9-3AD, 2, 10]

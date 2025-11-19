@@ -250,6 +250,7 @@ class DecisiveBattleTab(BaseTaskTab):
         """重写任务启动/停止的槽函数，在启动前进行检查"""
         if not self._is_fleet_size_valid():
             self._toggle_warning_label(show=True)
+            self.log_message_signal.emit(f"\n决战配置错误：舰队数量不满足章节要求！\n已阻止决战启动，请调整舰队编组后重试。\n")
             return
         self._toggle_warning_label(show=False)
         super()._on_task_toggle()

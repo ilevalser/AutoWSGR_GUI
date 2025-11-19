@@ -36,7 +36,6 @@ class SettingsTab(QWidget):
 
         # 更新船名文件路径
         update_config_value(self.settings_data, 'ship_name_file', SHIP_NAME_FILE.as_posix())
-        update_config_value(self.settings_data, 'check_update', False)
         save_config(self.yaml_manager, self.settings_data, self.settings_path)
         
     def _setup_ui(self):

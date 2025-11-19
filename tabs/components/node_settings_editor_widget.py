@@ -262,7 +262,7 @@ class NodeSettingsEditorWidget(QWidget):
                 
         elif selected_node:
             # 保存到 node_args
-            if 'node_args' not in self.plan_data:
+            if 'node_args' not in self.plan_data or self.plan_data['node_args'] is None:
                 self.plan_data['node_args'] = {}
             
             if new_data:

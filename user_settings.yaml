@@ -1,6 +1,5 @@
 debug: False
 log_level: INFO
-check_update: False
 delay: 3.0
 dock_full_destroy: True
 destroy_ship_work_mode: 0
@@ -19,22 +18,21 @@ daily_automation:
   auto_expedition: True
   auto_gain_bonus: True
   auto_bath_repair: True
-  auto_set_support: False
+  auto_set_support: True
   auto_battle: False
   battle_type: 困难战列
   auto_exercise: False
   exercise_fleet_id: 3
   auto_normal_fight: True
   normal_fight_tasks:
-    - [7-46SS-all2, 2, 10]
-    - [9-2胖次, 4, 500]
+    - [9-3AD, 1, 100]
   quick_repair_limit:
   stop_max_ship: True
-  stop_max_loot: False
+  stop_max_loot: True
 
 decisive_battle:
   chapter: 6
-  level1: []
+  level1: ["莱昂纳多·达·芬奇"]
   level2: []
   flagship_priority: []
   repair_level: 2
@@ -44,4 +42,3 @@ decisive_battle:
 
 ship_name_file: E:/AutoWSGR_GUI/resources/ship_name.yaml
 plan_root: E:/AutoWSGR_GUI/plans
-

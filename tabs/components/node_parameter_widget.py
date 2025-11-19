@@ -53,7 +53,7 @@ class NodeParameterWidget(QWidget):
             {'widget': self.sl_detour_fails_check, 'key': 'SL_when_detour_fails', 'description': "在迂回阶段如果迂回失败则SL"},
             {'widget': self.sl_enter_fight_check, 'key': 'SL_when_enter_fight', 'description': "在进入战斗时立即SL，用于快速刷战术经验"},
             {'widget': (QLabel("阵型选择:"), self.formation_combo), 'key': 'formation', 'description': "选择战斗的阵型<br>单点的复纵阵会被默认设置的其他阵型覆盖"},
-            {'widget': (QLabel("索敌失败阵型:"), self.formation_spot_fails_combo), 'key': 'formation_when_spot_enemy_fails', 'description': "索敌失败时使用的阵型，0为不设置"},
+            {'widget': (QLabel("索敌失败阵型:"), self.formation_spot_fails_combo), 'key': 'formation_when_spot_enemy_fails', 'description': "索敌失败时使用的阵型"},
             {'widget': self.night_check, 'key': 'night', 'description': "是否进入夜战"},
             {'widget': self.proceed_check, 'key': 'proceed', 'description': "是否继续战斗"},
             {'widget': (QLabel("中止前进策略:"), self.proceed_stop_combo), 'extra_widget': self.proceed_stop_buttons_container, 'key': 'proceed_stop', 'description': "根据我方血量状态决定是否中止前进，逻辑同修理模式"},
@@ -102,7 +102,7 @@ class NodeParameterWidget(QWidget):
         self.formation_combo.currentIndexChanged.connect(self.parameters_changed)
         self.formation_spot_fails_combo.currentIndexChanged.connect(self.parameters_changed)
 
-        self.proceed_stop_combo.currentIndexChanged.connect(self.parameters_changed)
+        self.proceed_stop_combo.currentIndexChanged.connect(self._on_proceed_stop_combo_changed)
         for btn in self.proceed_stop_buttons_container.property("buttons"):
             btn.toggled.connect(self.parameters_changed)
 
@@ -240,15 +240,16 @@ class NodeParameterWidget(QWidget):
     
     def _on_edit_enemy_formation_rules(self):
         """打开敌方阵型规则编辑器"""
-        # 从未控制数据中获取当前规则并执行对话框
         current_rules = self._uncontrolled_data.get('enemy_formation_rules', [])
         dialog = EnemyFormationRulesDialog(current_rules, self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             new_rules = dialog.get_rules()
-            # 检查规则是否真的改变了
-            if new_rules == current_rules:
-                return
-            # 将新规则存回未控制数据
+            if new_rules == current_rules: return
             self._uncontrolled_data['enemy_formation_rules'] = new_rules
-            # 发出信号，通知父级数据已更改
             self.parameters_changed.emit()
+    
+    def _on_proceed_stop_combo_changed(self, index):
+        """当“中止前进策略”下拉框变化时，控制按钮组的启用状态"""
+        is_custom = (index == 0)
+        self.proceed_stop_buttons_container.setEnabled(is_custom)
+        self.parameters_changed.emit()
