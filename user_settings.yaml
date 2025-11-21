@@ -1,6 +1,6 @@
 debug: False
 log_level: INFO
-delay: 3.0
+delay: 1.5
 dock_full_destroy: True
 destroy_ship_work_mode: 0
 destroy_ship_types:
@@ -10,7 +10,7 @@ destroy_ship_types:
   - 导驱
 remove_equipment_mode: True
 bathroom_feature_count: 3
-bathroom_count: 7
+bathroom_count: 8
 
 emulator_type: 蓝叠
 emulator_name:
@@ -19,20 +19,20 @@ daily_automation:
   auto_gain_bonus: True
   auto_bath_repair: True
   auto_set_support: True
-  auto_battle: False
+  auto_battle: True
   battle_type: 困难战列
-  auto_exercise: False
+  auto_exercise: True
   exercise_fleet_id: 3
   auto_normal_fight: True
   normal_fight_tasks:
-    - [9-3AD, 1, 100]
-  quick_repair_limit:
+    - [9-3AD, 2, 10]
+  quick_repair_limit: 20
   stop_max_ship: True
   stop_max_loot: True
 
 decisive_battle:
   chapter: 6
-  level1: ["莱昂纳多·达·芬奇"]
+  level1: []
   level2: []
   flagship_priority: []
   repair_level: 2

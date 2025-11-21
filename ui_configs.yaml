@@ -1,22 +1,12 @@
 check_update_gui: False
-auto_scroll: True
-custom_names:
-  - "决战1"
-  - "决战2"
-  - "决战3"
-  - "决战4"
-  - "决战5"
-  - "决战6"
-  - "决战7"
-  - "决战8"
-  - "决战9"
-  - "决战X"
+auto_scroll: False
+custom_names: []
 sortie_times: 1
 event_automation:
   event_folder: '20250930'
   plan_name: E11A夜战
   fleet_id: 2
-  battle_count: 40
+  battle_count: 100
   reuse_daily_settings: False
   bonus_check_interval: 1800
 use_quick_repair: True
@@ -26,3 +16,6 @@ preset_task:
     - [9-2胖次, 4, 500]
   10把加成:
     - [9-3AD, 2, 10]
+auto_restart: True
+last_selected_task: 日常
+max_restarts: 10

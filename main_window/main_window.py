@@ -61,6 +61,7 @@ class MainWindow(QMainWindow):
         # 任务管理
         self.task_tabs = {}  # 用于存储所有任务选项卡的字典
         self.running_task_tab = None # 追踪当前正在运行任务的Tab实例
+        self._restart_counts = {}
 
         # 更新管理
         self._is_updating = False
@@ -517,7 +518,7 @@ class MainWindow(QMainWindow):
         self.log_tab.append_log_message("--- 更新检查完成 ---\n")
 
         self._is_updating = False
-        self._on_any_task_finished("")
+        self._on_any_task_finished("", is_error=False)
         # 如果有一个等待执行的任务，现在就启动它
         if self._task_to_run_after_update:
             task_name = self._task_to_run_after_update
@@ -570,11 +571,36 @@ class MainWindow(QMainWindow):
                 tab_instance.set_button_enabled(False)
 
     @Slot(str)
-    def _on_any_task_finished(self, finished_task_name: str):
-        """当任何一个任务结束时，此槽函数被调用，负责重置全局UI状态"""
+    def _on_any_task_finished(self, finished_task_name: str, is_error: bool = False):
+        """当任何一个任务结束时，此槽函数被调用，负责重置全局UI状态并处理重启"""
         self.running_task_tab = None
-
         self.title_bar.stop_task_animation()
         self.log_tab.update_for_task_state(False)
-
         self._set_all_task_buttons_enabled(True)
+        if not finished_task_name: return
+        # 处理自动重启逻辑
+        if is_error:
+            # 检查开关是否开启
+            if self.log_tab.auto_restart_checkbox.isChecked():
+                max_restarts = self.configs_data.get('max_restarts', 0)
+                current_count = self._restart_counts.get(finished_task_name, 0)
+                # 判断是否允许重启
+                if max_restarts == 0 or current_count < max_restarts:
+                    self._restart_counts[finished_task_name] = current_count + 1
+                    log_msg = f"检测到 {finished_task_name} 异常退出，3秒后尝试第 {current_count + 1} 次自动重启..."
+                    if max_restarts > 0:
+                        log_msg += f" (上限: {max_restarts})"
+                    self.log_tab.append_log_message(log_msg)
+                    QTimer.singleShot(3000, lambda: self._handle_task_toggle_request(finished_task_name, force_run=True))
+                else:
+                    # 达到上限
+                    self.log_tab.append_log_message(
+                        f"!! {finished_task_name} 异常退出，已达到最大自动重启次数 ({max_restarts})，停止运行 !!"
+                    )
+                    self._restart_counts[finished_task_name] = 0
+            else:
+                # 未开启自动重启，清零计数器
+                self._restart_counts[finished_task_name] = 0
+        else:
+            # 正常结束或手动停止，清零计数器
+            self._restart_counts[finished_task_name] = 0

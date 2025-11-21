@@ -10,13 +10,14 @@ class BaseTaskTab(QWidget):
     log_message_signal = Signal(str)
     # 任务启动时发出，并附带任务名
     task_started = Signal(str)
-    # 任务结束时发出，并附带任务名
-    task_finished = Signal(str)
+    # 任务结束时发出，并附带任务名和是否完成
+    task_finished = Signal(str,bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.task_process = QProcess(self)
         self.log_encoding = locale.getpreferredencoding()
+        self._is_manual_stop = False # 手动停止标志位
 
         # 连接通用的信号
         self.task_process.readyReadStandardOutput.connect(
@@ -48,8 +49,10 @@ class BaseTaskTab(QWidget):
     def _on_task_toggle(self):
         """启动或中止后台脚本"""
         if self.task_process.state() == QProcess.ProcessState.Running:
+            self._is_manual_stop = True
             self.task_process.kill()
         else:
+            self._is_manual_stop = False
             self.task_process.setWorkingDirectory(str(BASE_DIR))
             module_path = self.get_script_module_path()
             args = self.get_script_args()
@@ -68,15 +71,21 @@ class BaseTaskTab(QWidget):
         self.log_message_signal.emit(f"\n------------ {task_name}任务已启动 ------------\n")
         self.task_started.emit(task_name)
 
-    def _on_task_finished(self):
+    def _on_task_finished(self, exit_code, exit_status):
         """后台脚本结束时的通用UI更新"""
         button = self.get_start_button()
         task_name = button.objectName()
         button.setText(f"启动{task_name}")
         button.setProperty("running", False)
         button.style().polish(button)
+        # 判断是否为异常退出
+        is_error = False
+        if not self._is_manual_stop:
+            if exit_status == QProcess.ExitStatus.CrashExit or exit_code != 0:
+                is_error = True
+                self.log_message_signal.emit(f"\n⚠任务异常退出 (代码: {exit_code})")
         self.log_message_signal.emit(f"\n------------ {task_name}任务已结束 ------------\n")
-        self.task_finished.emit(task_name)
+        self.task_finished.emit(task_name, is_error)
         
     def _process_output_and_log(self, is_error=False):
         """读取并记录后台脚本的输出"""
