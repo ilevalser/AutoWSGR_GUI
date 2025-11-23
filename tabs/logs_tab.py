@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTextEdit,
     QPushButton, QFrame, QLabel, QLineEdit
 )
-from PySide6.QtGui import QTextCursor, QIntValidator
+from PySide6.QtGui import QTextCursor
 from PySide6.QtCore import Slot, Signal, Qt
 from ansi2html import Ansi2HTMLConverter
 from tabs.components.combo_box import CustomComboBox

@@ -52,7 +52,7 @@ class NodeParameterWidget(QWidget):
             {'widget': self.sl_spot_fails_check, 'key': 'SL_when_spot_enemy_fails', 'description': "在索敌阶段如果索敌失败则SL"},
             {'widget': self.sl_detour_fails_check, 'key': 'SL_when_detour_fails', 'description': "在迂回阶段如果迂回失败则SL"},
             {'widget': self.sl_enter_fight_check, 'key': 'SL_when_enter_fight', 'description': "在进入战斗时立即SL，用于快速刷战术经验"},
-            {'widget': (QLabel("阵型选择:"), self.formation_combo), 'key': 'formation', 'description': "选择战斗的阵型<br>单点的复纵阵会被默认设置的其他阵型覆盖"},
+            {'widget': (QLabel("阵型选择:"), self.formation_combo), 'key': 'formation', 'description': "选择战斗的阵型"},
             {'widget': (QLabel("索敌失败阵型:"), self.formation_spot_fails_combo), 'key': 'formation_when_spot_enemy_fails', 'description': "索敌失败时使用的阵型"},
             {'widget': self.night_check, 'key': 'night', 'description': "是否进入夜战"},
             {'widget': self.proceed_check, 'key': 'proceed', 'description': "是否继续战斗"},

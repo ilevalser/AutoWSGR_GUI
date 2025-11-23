@@ -7,7 +7,7 @@ from constants import VISIBLE_PARAMS_MAP, PARAM_DEFAULTS, KEY_ORDER_MAP
 
 class NodeSettingsEditorWidget(QWidget):
     """
-    管理“节点设置”的控件，包括“默认设置”和“单点设置”。
+    管理“节点设置”的控件，包括“默认节点设置”和“单点设置”。
     它包含一个下拉框来选择编辑对象，以及一个 NodeParameterWidget 来编辑参数。
     """
     settings_changed = Signal()  # 当任何设置(默认或单独)被更改时发出
@@ -67,8 +67,8 @@ class NodeSettingsEditorWidget(QWidget):
             return base_params
         selected_node = self.node_selector_combo.currentText()
         
-        # 默认设置总是显示启用迂回
-        if selected_node == "默认设置" or not selected_node:
+        # 默认节点设置总是显示启用迂回
+        if selected_node == "默认节点设置" or not selected_node:
             # 检查任何已选节点是否可迂回
             can_any_selected_node_detour = False
             for node_name in self.selected_nodes_list:
@@ -102,10 +102,10 @@ class NodeSettingsEditorWidget(QWidget):
         self.plan_defaults = PARAM_DEFAULTS.copy()
         self.plan_defaults.update(self.plan_data.get('node_defaults') or {})
 
-        # 先填充下拉框，这样 _get_current_visible_params 才能获取到默认设置
+        # 先填充下拉框，这样 _get_current_visible_params 才能获取到默认节点设置
         self.node_selector_combo.blockSignals(True)
         self.node_selector_combo.clear()
-        self.node_selector_combo.addItem("默认设置")
+        self.node_selector_combo.addItem("默认节点设置")
 
         if self.current_plan_type == 'battle':
             self.selector_widget.hide()
@@ -120,10 +120,10 @@ class NodeSettingsEditorWidget(QWidget):
                 self.node_selector_combo.addItems(sorted(selected_nodes_list))
             self.node_selector_combo.setEnabled(self.node_selector_combo.count() > 1)
         
-        self.node_selector_combo.setCurrentIndex(0) # 确保选中默认设置
+        self.node_selector_combo.setCurrentIndex(0) # 确保选中默认节点设置
         self.node_selector_combo.blockSignals(False)
         
-        # 获取默认设置对应的可见参数
+        # 获取默认节点设置对应的可见参数
         visible_params = self._get_current_visible_params()
 
         # 检查是否有可见参数
@@ -140,16 +140,13 @@ class NodeSettingsEditorWidget(QWidget):
         """
         if self.current_plan_type not in ['normal_fight', 'week', 'special_ap_task', 'event']:
             return
-        
         self.selected_nodes_list = sorted(nodes_list or [])
-        
-        # 记住当前选中的是什么
         current_selection = self.node_selector_combo.currentText()
         
         # 重新填充下拉框
         self.node_selector_combo.blockSignals(True)
         self.node_selector_combo.clear()
-        self.node_selector_combo.addItem("默认设置")
+        self.node_selector_combo.addItem("默认节点设置")
         
         if self.selected_nodes_list:
             self.node_selector_combo.addItems(self.selected_nodes_list)
@@ -162,14 +159,14 @@ class NodeSettingsEditorWidget(QWidget):
         else: # 原来的选项不在了
             self.node_selector_combo.setCurrentIndex(0)
             # 如果选项被迫改变必须手动加载新选项的数据
-            if current_selection != "默认设置":
+            if current_selection != "默认节点设置":
                 self._load_current_node_data()
                 
         # 只有当有节点可选时才启用下拉框
         self.node_selector_combo.setEnabled(self.node_selector_combo.count() > 1)
         self.node_selector_combo.blockSignals(False)
-        # 如果正在查看默认设置则刷新UI
-        if self.node_selector_combo.currentText() == "默认设置":
+        # 如果正在查看默认节点设置则刷新UI
+        if self.node_selector_combo.currentText() == "默认节点设置":
             # 立即获取新的可见参数
             new_visible_params = self._get_current_visible_params()
             # 检查 detour 是否应该被隐藏
@@ -178,12 +175,9 @@ class NodeSettingsEditorWidget(QWidget):
                 # 如果应该隐藏并卡在内存里的话删掉它
                 if node_defaults and 'detour' in node_defaults:
                     del node_defaults['detour']
-                    # 如果删除后 node_defaults 变空也删除
                     if not node_defaults:
                         del self.plan_data['node_defaults']
-                    # 保存
                     self.settings_changed.emit()
-            # 刷新UI
             self._load_current_node_data()
 
     def _on_node_selected(self, node_name: str):
@@ -209,8 +203,8 @@ class NodeSettingsEditorWidget(QWidget):
             # 战役使用 plan_defaults
             self.param_widget.set_defaults(self.plan_defaults)
             data_to_load = self.plan_data.get('node_args') or {}
-        elif selected_node == "默认设置" or not selected_node:
-            # 默认设置使用 PARAM_DEFLOATS
+        elif selected_node == "默认节点设置" or not selected_node:
+            # 默认节点设置使用 PARAM_DEFLOATS
             self.param_widget.set_defaults(PARAM_DEFAULTS)
             data_to_load = self.plan_data.get('node_defaults') or {}
         elif selected_node:
@@ -220,7 +214,7 @@ class NodeSettingsEditorWidget(QWidget):
             data_to_load = (node_args_dict.get(selected_node) or {}).copy()
 
         # 检查 detour 是否刚被设为不可见
-        if 'detour' not in visible_params and selected_node != "默认设置":
+        if 'detour' not in visible_params and selected_node != "默认节点设置":
             # 如果包含一个无效的 detour
             if 'detour' in data_to_load:
                 # 在加载到 param_widget 之前删除
@@ -249,7 +243,7 @@ class NodeSettingsEditorWidget(QWidget):
         # 确定要保存到哪里
         selected_node = self.node_selector_combo.currentText()
         
-        if selected_node == "默认设置" or not selected_node:
+        if selected_node == "默认节点设置" or not selected_node:
             # 保存到 node_defaults
             if new_data:
                 self.plan_data['node_defaults'] = new_data
