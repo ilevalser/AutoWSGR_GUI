@@ -183,9 +183,7 @@ class SettingsTab(QWidget):
         self.delay_input.editingFinished.connect(self._save_delay)
         self.bathroom_feature_count_spin.valueChanged.connect(lambda v: self._handle_value_change('bathroom_feature_count', v))
         self.bathroom_count_spin.valueChanged.connect(lambda v: self._handle_value_change('bathroom_count', v))
-        self.emulator_type_combo.currentTextChanged.connect(self._on_emulator_type_changed)
-        self.emulator_type_combo.currentTextChanged.connect(self._validate_and_save_emulator_name)
-        self.emulator_name_input.editingFinished.connect(self._validate_and_save_emulator_name)
+
         self.settings_data_button.clicked.connect(self._on_import_settings_clicked)
         self.plan_root_button.clicked.connect(self._on_select_plan_root_clicked)
         self.dock_full_destroy_cb.toggled.connect(lambda v: self._handle_value_change('dock_full_destroy', v))
@@ -197,6 +195,10 @@ class SettingsTab(QWidget):
         for name, button in self.category_buttons.items():
             button.clicked.connect(lambda _, n=name: self._on_category_clicked(n))
 
+        self.emulator_type_combo.currentTextChanged.connect(self._on_emulator_type_changed)
+        self.emulator_type_combo.currentTextChanged.connect(self._validate_and_save_emulator_name)
+        self.emulator_name_input.editingFinished.connect(self._validate_and_save_emulator_name)
+
     def _load_data_to_ui(self):
         """从配置数据加载初始值到UI控件。"""
         self.check_update_cb.setChecked(self.configs_data.get('check_update_gui', False))
@@ -205,11 +207,19 @@ class SettingsTab(QWidget):
         self.delay_input.setText(str(self.settings_data.get('delay', 1.5)))
         self.bathroom_feature_count_spin.setValue(self.settings_data.get('bathroom_feature_count', 1))
         self.bathroom_count_spin.setValue(self.settings_data.get('bathroom_count', 1))
+
+        self.emulator_type_combo.blockSignals(True)
+        self.emulator_name_input.blockSignals(True)
         emulator_type_text = self.settings_data.get('emulator_type', '其他')
         self.emulator_type_combo.setCurrentText(emulator_type_text)
         emulator_name_text = self.settings_data.get('emulator_name', '')
-        self.emulator_name_input.setText(emulator_name_text or '') # 确保 None 值不会错误地传递
+        if emulator_name_text is None: emulator_name_text = ''
+        else: emulator_name_text = str(emulator_name_text)
+        self.emulator_name_input.setText(emulator_name_text) # 确保 None 值不会错误地传递
+        self.emulator_type_combo.blockSignals(False)
+        self.emulator_name_input.blockSignals(False)
         self._validate_and_save_emulator_name()  # 确保初始状态正确
+
         plan_root_path = self.settings_data.get('plan_root', '')
         self.plan_root_input.setText(plan_root_path or '')
         self._validate_and_save_plan_root(plan_root_path, initial_load=True)

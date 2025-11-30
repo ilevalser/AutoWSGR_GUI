@@ -101,6 +101,18 @@ class LogTab(QWidget):
 
     def _load_initial_settings(self):
         """从配置文件加载初始UI状态"""
+        saved_auto_restart = self.configs_data.get('auto_restart', False)
+        self.auto_restart_checkbox.setChecked(saved_auto_restart)
+        self.auto_restart_checkbox.update_icon()
+        max_restarts = self.configs_data.get('max_restarts', 0)
+        self.max_restart_input.setText(str(max_restarts))
+
+        saved_auto_scroll = self.configs_data.get('auto_scroll', True)
+        self.auto_scroll_enabled = saved_auto_scroll
+        self.auto_scroll_checkbox.setChecked(saved_auto_scroll)
+        self.auto_scroll_checkbox.update_icon()
+    
+    def set_task_list(self):
         last_selected_task = self.configs_data.get('last_selected_task', "")
         if last_selected_task:
             # 只有当任务在列表中存在时才设置，防止配置了不存在的任务
@@ -108,21 +120,6 @@ class LogTab(QWidget):
             if index != -1:
                 self.task_selector_combo.setCurrentIndex(index)
 
-        saved_auto_restart = self.configs_data.get('auto_restart', False)
-        self.auto_restart_checkbox.blockSignals(True)
-        self.auto_restart_checkbox.setChecked(saved_auto_restart)
-        self.auto_restart_checkbox.blockSignals(False)
-        self.auto_restart_checkbox.update_icon()
-        max_restarts = self.configs_data.get('max_restarts', 0)
-        self.max_restart_input.setText(str(max_restarts))
-
-        saved_auto_scroll = self.configs_data.get('auto_scroll', True)
-        self.auto_scroll_enabled = saved_auto_scroll
-        self.auto_scroll_checkbox.blockSignals(True)
-        self.auto_scroll_checkbox.setChecked(saved_auto_scroll)
-        self.auto_scroll_checkbox.blockSignals(False)
-        self.auto_scroll_checkbox.update_icon()
-    
     def set_quick_actions_enabled(self, enabled: bool, tooltip: str = ""):
         """
         由主窗口调用，用于在特殊状态（如更新时）统一控制按钮的可用性。
@@ -167,17 +164,6 @@ class LogTab(QWidget):
         self.auto_scroll_enabled = checked
         update_config_value(self.configs_data, 'auto_scroll', checked)
         save_config(self.yaml_manager, self.configs_data, self.configs_path)
-
-    @Slot(str)
-    def append_log_message(self, message):
-        """槽函数，用于接收并显示日志信息，并根据设置滚动"""
-        message = message.rstrip()
-        self.log_display.moveCursor(QTextCursor.MoveOperation.End)
-        self.log_display.insertPlainText(message + "\n")
-        if self.auto_scroll_enabled:
-            self.log_display.verticalScrollBar().setValue(
-                self.log_display.verticalScrollBar().maximum()
-            )
 
     @Slot(bool, str)
     def update_for_task_state(self, is_running: bool, task_name: str = ""):

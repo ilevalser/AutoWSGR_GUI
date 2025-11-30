@@ -8,6 +8,7 @@ from main_window.side_bar import SideBar
 from utils.icon_utils import get_icon_path
 from constants import LOGO_FILE, SETTINGS_FILE, UI_CONFIGS_FILE
 from ruamel.yaml import YAML, YAMLError
+from pathlib import Path
 # 各选项卡
 from tabs.settings_tab import SettingsTab
 from tabs.daily_tab import DailyTab
@@ -109,25 +110,32 @@ class MainWindow(QMainWindow):
         self.yaml_manager.indent(mapping=2, sequence=4, offset=2)
         self.yaml_manager.boolean_representation = ['False', 'True']
         self.settings_data = self._load_yaml_file(SETTINGS_FILE)
-        self.configs_data = self._load_yaml_file(UI_CONFIGS_FILE)
+        self.ui_configs_data = self._load_yaml_file(UI_CONFIGS_FILE)
 
         # 初始化页面实例
-        self.log_tab = LogTab(self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
-        self.settings_tab = SettingsTab(self.settings_data, SETTINGS_FILE, self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
-        self.daily_tab = DailyTab(self.settings_data, SETTINGS_FILE, self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
+        self.log_tab = LogTab(self.ui_configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
+        self.settings_tab = SettingsTab(self.settings_data, SETTINGS_FILE, self.ui_configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
+
+        CUSTOM_SHIP_NAME_FILE = Path(self.settings_data.get('ship_name_file', [])) # 在settings_tab更新船名文件路径后再导入
+        self.custom_ship_name = self._load_yaml_file(CUSTOM_SHIP_NAME_FILE)
+
+        self.daily_tab = DailyTab(self.settings_data, SETTINGS_FILE, self.ui_configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
         self.task_tabs["日常"] = self.daily_tab
-        self.decisive_battle_tab = DecisiveBattleTab(self.settings_data, SETTINGS_FILE, self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
+        self.decisive_battle_tab = DecisiveBattleTab(self.settings_data, SETTINGS_FILE, self.ui_configs_data, UI_CONFIGS_FILE, self.custom_ship_name, CUSTOM_SHIP_NAME_FILE, self.yaml_manager, self)
         self.task_tabs["决战"] = self.decisive_battle_tab
-        self.event_tab = EventTab(self.settings_data, SETTINGS_FILE, self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
+        self.event_tab = EventTab(self.settings_data, SETTINGS_FILE, self.ui_configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
         self.task_tabs["活动"] = self.event_tab
-        self.plan_editor_tab = PlanEditorTab(self.configs_data, UI_CONFIGS_FILE, self.yaml_manager, self)
+        self.plan_editor_tab = PlanEditorTab(self.custom_ship_name, CUSTOM_SHIP_NAME_FILE, self.yaml_manager, self)
 
         # 填充内容
         self.populate_content()
         self.init_tray_icon() # 初始化托盘图标
 
         # 选择管理器
+        self.log_tab.task_selector_combo.blockSignals(True)
         self.log_tab.task_selector_combo.addItems(self.task_tabs.keys())
+        self.log_tab.set_task_list()
+        self.log_tab.task_selector_combo.blockSignals(False)
 
         # 更新
         self.update_process.readyReadStandardOutput.connect(self._log_update_output)
@@ -539,7 +547,7 @@ class MainWindow(QMainWindow):
 
         if task_name:
             # 只有在非强制模式下才检查更新
-            if self.configs_data.get('check_update_gui', False) and not force_run:
+            if self.ui_configs_data.get('check_update_gui', False) and not force_run:
                 self._is_updating = True
                 self._task_to_run_after_update = task_name
 
@@ -582,7 +590,7 @@ class MainWindow(QMainWindow):
         if is_error:
             # 检查开关是否开启
             if self.log_tab.auto_restart_checkbox.isChecked():
-                max_restarts = self.configs_data.get('max_restarts', 0)
+                max_restarts = self.ui_configs_data.get('max_restarts', 0)
                 current_count = self._restart_counts.get(finished_task_name, 0)
                 # 判断是否允许重启
                 if max_restarts == 0 or current_count < max_restarts:
@@ -595,7 +603,7 @@ class MainWindow(QMainWindow):
                 else:
                     # 达到上限
                     self.log_tab.append_log_message(
-                        f"!! {finished_task_name} 异常退出，已达到最大自动重启次数 ({max_restarts})，停止运行 !!"
+                        f"!! {finished_task_name} 异常退出，已达到最大自动重启次数 ({max_restarts})，停止运行。"
                     )
                     self._restart_counts[finished_task_name] = 0
             else:

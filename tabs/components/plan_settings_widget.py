@@ -53,15 +53,15 @@ class PlanSettingsWidget(QWidget):
     plan_data_changed = Signal()
     custom_ships_updated = Signal(list)
 
-    def __init__(self, yaml_manager: YAML, ui_configs_data: dict, ui_configs_path: str, parent=None):
+    def __init__(self, yaml_manager: YAML, custom_ship_name: dict, custom_ship_name_path: str, parent=None):
         """初始化控件。"""
         super().__init__(parent)
         self.yaml_manager = yaml_manager
         self.current_plan_path = None
         self.plan_data = {}
         self.plan_type = None
-        self.ui_configs_data = ui_configs_data
-        self.ui_configs_path = ui_configs_path
+        self.custom_ship_name = custom_ship_name
+        self.custom_ship_name_path = custom_ship_name_path
 
         self._setup_ui()
         self._connect_signals()
@@ -355,7 +355,7 @@ class PlanSettingsWidget(QWidget):
     def _open_fleet_editor(self, display_label):
         """打开舰队编辑器对话框，并在完成后保存和更新UI。"""
         current_fleet = self.plan_data.get('fleet', [])
-        custom_ships = self.ui_configs_data.get('custom_names', [])
+        custom_ships = self.custom_ship_name.get('custom_ship_names', [])
         
         dialog = FleetEditorDialog(current_fleet, custom_ships, self.window())
         dialog.custom_ships_changed.connect(self._on_custom_ships_changed)
@@ -367,7 +367,7 @@ class PlanSettingsWidget(QWidget):
 
     def _on_custom_ships_changed(self, new_custom_ships: list):
         """接收来自对话框的信号，更新内存中的数据副本，并向父组件发射信号。"""
-        self.ui_configs_data['custom_names'] = new_custom_ships
+        self.custom_ship_name['custom_ship_names'] = new_custom_ships
         self.custom_ships_updated.emit(new_custom_ships)
 
     # --- 数据加载与保存 ---

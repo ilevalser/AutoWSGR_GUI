@@ -1,6 +1,5 @@
 check_update_gui: False
-auto_scroll: False
-custom_names: []
+auto_scroll: True
 sortie_times: 1
 event_automation:
   event_folder: '20250930'
@@ -9,12 +8,12 @@ event_automation:
   battle_count: 100
   reuse_daily_settings: False
   bonus_check_interval: 1800
-use_quick_repair: True
+use_quick_repair: False
 preset_task:
-  胖次:
+  捞胖次:
     - [7-46SS-all2, 2, 10]
     - [9-2胖次, 4, 500]
-  10把加成:
+  10把战术加成:
     - [9-3AD, 2, 10]
 auto_restart: True
 last_selected_task: 日常

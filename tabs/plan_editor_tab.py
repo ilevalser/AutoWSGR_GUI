@@ -199,13 +199,13 @@ class MapDisplayWidget(QWidget):
 class PlanEditorTab(QWidget):
     """用于编辑任务计划的标签页"""
 
-    def __init__(self, ui_configs_data, ui_configs_path, yaml_manager, parent=None):
+    def __init__(self, custom_ship_name, custom_ship_name_path, yaml_manager, parent=None):
         super().__init__(parent)
         self.current_plan_path_dir = ""
         self.plan_root_path = self._get_plan_root_path()
         self.yaml_manager = yaml_manager
-        self.ui_configs_data = ui_configs_data
-        self.ui_configs_path = ui_configs_path
+        self.custom_ship_name = custom_ship_name
+        self.custom_ship_name_path = custom_ship_name_path
         self.normal_map_configs = self._load_normal_map_configs()
         self.event_map_configs = self._load_event_map_configs()
         self.current_plan_data = None
@@ -321,7 +321,7 @@ class PlanEditorTab(QWidget):
         button_layout.addWidget(self.save_button)
         button_layout.addWidget(self.cancel_button)
         # 滚动区域
-        self.settings_panel = PlanSettingsWidget(self.yaml_manager, self.ui_configs_data, self.ui_configs_path)
+        self.settings_panel = PlanSettingsWidget(self.yaml_manager, self.custom_ship_name, self.custom_ship_name_path)
         self.node_settings_panel = NodeSettingsEditorWidget()
         
 
@@ -735,14 +735,14 @@ class PlanEditorTab(QWidget):
         self._set_dirty(True)
 
     def _on_custom_ships_updated(self, custom_ships: list):
-        """当自定义舰船列表更新时，保存到 user_configs.yaml 文件。"""
-        if not self.ui_configs_path:
+        """当自定义舰船列表更新时，保存到 ship_name.yaml 文件。"""
+        if not self.custom_ship_name_path:
             return
-        update_config_value(self.ui_configs_data, 'custom_names', CommentedSeq(custom_ships))
+        update_config_value(self.custom_ship_name, 'custom_ship_names', CommentedSeq(custom_ships))
         try:
-            save_config(self.yaml_manager, self.ui_configs_data, self.ui_configs_path)
+            save_config(self.yaml_manager, self.custom_ship_name, self.custom_ship_name_path)
         except Exception as e:
-            print(f"Error saving custom ships to {self.ui_configs_path}: {e}")
+            print(f"保存自定义船名到 {self.custom_ship_name_path} 时出错: {e}")
     
     def _on_plan_settings_changed(self):
         """当 PlanSettingsWidget 中的数据发生变化时调用。"""

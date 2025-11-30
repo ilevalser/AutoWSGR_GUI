@@ -20,15 +20,18 @@ class DecisiveBattleTab(BaseTaskTab):
     def __init__(
         self, settings_data, settings_path,
         ui_configs_data, ui_configs_path,
+        custom_ship_name, custom_ship_name_path,
         yaml_manager, parent=None
     ):
         """初始化决战设置选项卡"""
         super().__init__(parent)
         self.settings_data = settings_data
         self.ui_configs_data = ui_configs_data
+        self.custom_ship_name = custom_ship_name
         self.yaml_manager = yaml_manager
         self.settings_path = settings_path
         self.ui_configs_path = ui_configs_path
+        self.custom_ship_name_path = custom_ship_name_path
 
         self._setup_ui()
         self._connect_signals()
@@ -112,7 +115,7 @@ class DecisiveBattleTab(BaseTaskTab):
         left_layout.addStretch()
 
         # 右侧面板（舰队配置）
-        custom_ships = self.ui_configs_data.get('custom_names', [])
+        custom_ships = self.custom_ship_name.get('custom_ship_names', [])
         initial_custom_ships = [str(item) for item in custom_ships] if isinstance(custom_ships, (list, CommentedSeq)) else []
         self.fleet_config_controller = FleetConfigWidget(initial_custom_ships, self)
 
@@ -174,7 +177,7 @@ class DecisiveBattleTab(BaseTaskTab):
             lambda data: self._save_list_to_config(self.settings_data, self.settings_path, "decisive_battle.flagship_priority", data, style='flow')
         )
         self.fleet_config_controller.custom_ships_changed.connect(
-            lambda data: self._save_list_to_config(self.ui_configs_data, self.ui_configs_path, "custom_names", data, style='block')
+            lambda data: self._save_list_to_config(self.custom_ship_name, self.custom_ship_name_path, "custom_ship_names", data, style='block')
         )
         self.fleet_config_controller.log_message_signal.connect(self.log_message_signal.emit)
 

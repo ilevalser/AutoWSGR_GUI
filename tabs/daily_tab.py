@@ -531,8 +531,11 @@ class DailyTab(BaseTaskTab):
     def _is_current_task_list_a_duplicate(self):
         """检查当前的任务列表是否与任何已保存的预设内容相同"""
         current_tasks_data = self.settings_data.get('daily_automation', {}).get('normal_fight_tasks', [])
-        # 转换为标准list以便比较
-        current_tasks_list = [list(task) for task in current_tasks_data]
+        # 处理 None 值的情况
+        if current_tasks_data is None:
+            current_tasks_list = []
+        else:
+            current_tasks_list = [list(task) for task in current_tasks_data]
 
         preset_map = self._get_preset_map()
         if not preset_map: return False
