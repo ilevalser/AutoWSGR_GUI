@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QPushButton, QListWidget, QListWidgetItem, QApplication, QAbstractItemView, QLabel, QHBoxLayout, QWidget
 from PySide6.QtCore import Qt, Signal, QSize, QPoint, QEvent
 from utils.icon_utils import get_icon_path, create_colored_pixmap
+from utils.ui_utils import natural_sort_key
 
 class CustomComboBox(QPushButton):
     currentIndexChanged = Signal(int)
@@ -114,7 +115,7 @@ class CustomComboBox(QPushButton):
         if userData is not None: item.setData(Qt.ItemDataRole.UserRole, userData)
         self.list_widget.addItem(item)
         if self._current_index == -1 and self.count() > 0: self.setCurrentIndex(0)
-    def addItems(self, texts): [self.addItem(text) for text in texts]
+    def addItems(self, texts): [self.addItem(text) for text in sorted(texts, key=natural_sort_key)]
     def count(self): return self.list_widget.count()
     def currentIndex(self): return self._current_index
     def currentText(self): return "" if self._current_index == -1 else self.text_label.text()

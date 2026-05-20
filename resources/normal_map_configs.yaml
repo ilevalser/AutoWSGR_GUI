@@ -1405,3 +1405,53 @@ chapter9:
         connections: [O]
       O:
         pos: [0.1824, 0.7951]
+
+chapter10:
+  10-1:
+    name: 极地海峡
+    nodes:
+      A:
+        is_start: True
+        detourable: True
+        pos: [0.8717,0.3118]
+        connections: [C, I]
+      B:
+        is_start: True
+        pos: [0.825,0.5506]
+        connections: [D, F]
+      C:
+        pos: [0.7138,0.0976]
+      D:
+        pos: [0.7138,0.8188]
+        connections: [E, G]
+      E:
+        pos: [0.5092,0.92]
+      F:
+        pos: [0.6592,0.4494]
+        connections: [H]
+      G:
+        pos: [0.525,0.7329]
+        connections: [L]
+      H:
+        pos: [0.4697,0.5059]
+        connections: [L]
+      I:
+        pos: [0.5724,0.3247]
+        connections: [J, K]
+      J:
+        pos: [0.4533,0.1306]
+      K:
+        pos: [0.3592,0.4365]
+        connections: [N, O]
+      L:
+        detourable: True
+        pos: [0.3276,0.7471]
+        connections: [M]
+      M:
+        pos: [0.1296,0.6765]
+        connections: [O]
+      N:
+        pos: [0.248,0.2541]
+        connections: [O]
+      O:
+        pos: [0.0586,0.3706]

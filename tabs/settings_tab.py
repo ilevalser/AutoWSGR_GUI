@@ -67,7 +67,7 @@ class SettingsTab(QWidget):
         self.emulator_name_input.setPlaceholderText("默认不填")
         self.plan_root_input = QLineEdit()
         self.plan_root_input.setReadOnly(True)
-        self.plan_root_label = QLabel("选择方案路径文件夹：")
+        self.plan_root_label = QLabel("选择用户自定方案路径文件夹：")
         self.plan_root_label.setObjectName("FormLabel")
         self.plan_root_button = QPushButton("选择文件夹")
         self.plan_root_button.setObjectName("plans_button")

@@ -131,7 +131,7 @@ class PlanSettingsWidget(QWidget):
         """统一创建所有界面控件实例，便于管理。"""
         # 常规战斗
         self.nf_chapter_spin = CustomSpinBox()
-        self.nf_chapter_spin.setRange(1, 9)
+        self.nf_chapter_spin.setRange(1, 10)
         self.nf_map_spin = CustomSpinBox()
         self.nf_map_spin.setRange(1, 6)
         self.nf_repair_combo, self.nf_repair_buttons_container = self._create_repair_mode_parts()

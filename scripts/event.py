@@ -14,15 +14,29 @@ bonus_check_interval = int(sys.argv[6])
 
 timer = start_script(SETTINGS_FILE)
 
-try:
-    module_name = f"autowsgr.fight.event.event_{event_identifier}"
-    class_name = f"EventFightPlan{event_identifier.replace('_', '')}"
-    event_module = importlib.import_module(module_name)
-    timer.logger.info(f"使用活动: {class_name}")
-    EventFightPlanClass = getattr(event_module, class_name)
+new_name = event_identifier.replace('_', '')
+old_name = f"event_{event_identifier}"
+module_name = None
 
-except (ImportError, AttributeError) as e:
-    timer.logger.error(f"无法加载指定的活动模块或类: {module_name}.{class_name}")
+for candidate_module in [f"autowsgr.fight.event.event{new_name}", f"autowsgr.fight.event.event_{event_identifier}"]:
+    try:
+        event_module = importlib.import_module(candidate_module)
+        # 新格式(event20260515)类名为EventFightPlan，旧格式(event_2026_0104)类名为EventFightPlan20260104
+        for class_name in [f"EventFightPlan{new_name}", "EventFightPlan"]:
+            try:
+                EventFightPlanClass = getattr(event_module, class_name)
+                module_name = candidate_module
+                timer.logger.info(f"使用活动: {class_name}")
+                break
+            except AttributeError:
+                continue
+        if module_name is not None:
+            break
+    except ImportError:
+        continue
+
+if module_name is None:
+    timer.logger.error(f"无法加载指定的活动模块或类，已尝试新格式(event{new_name})和旧格式(event_{event_identifier})")
     sys.exit()
 
 if reuse_daily_settings:

@@ -12,14 +12,14 @@ echo =================================================================
 echo ==        AutoWSGR GUI Python Dependencies Installer           ==
 echo =================================================================
 echo.
-echo This script will install the following required libraries:
+echo This script will install the following:
+echo   - Auto-WSGR backend (from GitHub)
 echo   - PySide6
 echo   - ruamel.yaml
 echo   - ansi2html
 echo.
-echo It will automatically detect the Python environment where
-echo 'autowsgr' is installed and use the Tsinghua University
-echo mirror for faster downloads.
+echo It will automatically detect an available Python environment
+echo and use the Tsinghua University mirror for faster downloads.
 echo.
 echo Press any key to start the process...
 pause >nul
@@ -38,9 +38,9 @@ for /f "tokens=*" %%a in ('py -0p 2^>nul') do (
     
     if defined PYTHON_EXE (
         echo Checking: !PYTHON_EXE!
-        "!PYTHON_EXE!" -c "import autowsgr" >nul 2>nul
+        "!PYTHON_EXE!" --version >nul 2>nul
         if !errorlevel! equ 0 (
-            echo   ^> Found 'autowsgr' in this environment!
+            echo   ^> Found Python environment!
             set "TARGET_PYTHON=!PYTHON_EXE!"
             goto :found_python
         )
@@ -52,9 +52,9 @@ echo --- Phase 2: 'py.exe' did not find a suitable environment.
 echo ---          Searching in your system PATH...
 for /f "delims=" %%i in ('where python 2^>nul') do (
     echo Checking: %%i
-    "%%i" -c "import autowsgr" >nul 2>nul
+    "%%i" --version >nul 2>nul
     if !errorlevel! equ 0 (
-        echo   ^> Found 'autowsgr' in this environment!
+        echo   ^> Found Python environment!
         set "TARGET_PYTHON=%%i"
         goto :found_python
     )
@@ -67,10 +67,10 @@ for /f "delims=" %%i in ('where python 2^>nul') do (
 echo.
 echo =================================== ERROR ===================================
 echo.
-echo Could not find a Python environment with the 'autowsgr' library installed.
+echo Could not find a Python environment on your system.
 echo.
-echo Please ensure you have installed 'autowsgr' in at least one Python
-echo environment accessible via 'py.exe' or your system's PATH.
+echo Please ensure Python is installed and accessible via 'py.exe'
+echo or your system's PATH.
 echo.
 echo =============================================================================
 goto :end
@@ -90,6 +90,7 @@ echo.
 echo Starting installation...
 echo.
 
+"%TARGET_PYTHON%" -m pip install "git+https://github.com/YaoerWu/Auto-WSGR.git@classic" -i https://pypi.tuna.tsinghua.edu.cn/simple
 "%TARGET_PYTHON%" -m pip install PySide6 ruamel.yaml ansi2html -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 if %errorlevel% equ 0 (

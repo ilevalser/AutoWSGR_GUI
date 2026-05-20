@@ -1,4 +1,5 @@
 import os
+from utils.plan_utils import get_backend_plans_dir, list_directory, merge_lists
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QApplication,
     QTableWidgetItem, QPushButton, QLabel, QLineEdit, QDialog
@@ -243,30 +244,41 @@ class DailyTab(BaseTaskTab):
         self.cancel_button.clicked.connect(self._on_cancel_edit)
 
     def _load_task_files_to_combo(self):
-        """加载任务文件夹下的任务文件到下拉菜单"""
+        """加载任务文件夹下的任务文件到下拉菜单（优先用户目录，其次后端内置目录）"""
         plan_root = self.settings_data.get('plan_root')
         if plan_root:
             self.normal_plans_dir = os.path.join(plan_root, 'normal_fight')
         else:
             self.normal_plans_dir = None
         
-        self.task_file_combo.clear() # 确保每次加载前都清空
-        self.task_file_combo.setEnabled(True) # 默认启用
+        self.task_file_combo.clear()
+        self.task_file_combo.setEnabled(True)
 
-        if not self.normal_plans_dir or not os.path.isdir(self.normal_plans_dir):
-            self.task_file_combo.addItem("方案路径无效或未设置")
+        # 从用户方案目录读取
+        user_files = []
+        if self.normal_plans_dir and os.path.isdir(self.normal_plans_dir):
+            try:
+                user_files = [f for f in os.listdir(self.normal_plans_dir) if f.endswith(('.yml', '.yaml'))]
+            except Exception as e:
+                self.log_message_signal.emit(f"错误: 读取用户日常方案时出错: {e}")
+
+        # 从后端内置方案目录读取
+        backend_base = get_backend_plans_dir()
+        backend_normal_dir = os.path.join(backend_base, 'normal_fight') if backend_base else None
+        backend_files = list_directory(
+            backend_normal_dir,
+            filter_func=lambda p: p.endswith(('.yml', '.yaml'))
+        )
+
+        # 合并去重，用户文件优先级更高
+        all_files = merge_lists(user_files, backend_files)
+
+        if not all_files:
+            self.task_file_combo.addItem("未找到日常作战方案")
             self.task_file_combo.setEnabled(False)
-            return
-        try:
-            files = [f for f in os.listdir(self.normal_plans_dir) if f.endswith(('.yml', '.yaml'))]
-            if not files:
-                self.task_file_combo.addItem("未找到日常作战方案")
-                self.task_file_combo.setEnabled(False)
-            else:
-                plan_names = sorted([os.path.splitext(f)[0] for f in files])
-                self.task_file_combo.addItems(plan_names)
-        except Exception as e:
-            self.log_message_signal.emit(f"错误: 读取任务文件时出错: {e}")
+        else:
+            plan_names = sorted([os.path.splitext(f)[0] for f in all_files])
+            self.task_file_combo.addItems(plan_names)
 
     def _load_data_to_ui(self):
         """从配置数据加载初始值到 UI 控件"""

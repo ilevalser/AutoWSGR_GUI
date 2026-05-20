@@ -10,6 +10,7 @@ from tabs.components.combo_box import CustomComboBox
 from tabs.components.base_task_tab import BaseTaskTab
 from utils.ui_utils import create_form_layout, create_group
 from utils.config_utils import update_config_value, save_config, validate_and_save_line_edit
+from utils.plan_utils import get_backend_plans_dir, list_directory, merge_lists
 
 class EventTab(BaseTaskTab):
     """活动挂机选项卡"""
@@ -25,6 +26,7 @@ class EventTab(BaseTaskTab):
         self.configs_path = configs_path
         self.yaml_manager = yaml_manager
         self.event_plans_dir = None
+        self.backend_event_plans_dir = None
 
         # 默认参数和范围
         self.BATTLE_COUNT_RANGE = (1, 999)
@@ -175,57 +177,73 @@ class EventTab(BaseTaskTab):
             self.log_message_signal.emit(str(e))
 
     def _populate_event_folders_combo(self):
-        """从 'plans/event' 目录加载活动文件夹名称到下拉框中"""
+        """从用户方案目录和后端内置方案目录加载活动文件夹名称到下拉框中"""
         plan_root = self.settings_data.get('plan_root', '')
         self.event_plans_dir = Path(plan_root) / 'event' if plan_root else None
-        
+        backend_plans = get_backend_plans_dir()
+        self.backend_event_plans_dir = Path(backend_plans) / 'event' if backend_plans else None
+
         self.event_folder_combo.clear()
         self.event_folder_combo.setEnabled(True)
 
-        if not self.event_plans_dir or not self.event_plans_dir.is_dir():
-            self.event_folder_combo.addItem("方案路径无效或未设置")
+        # 从用户方案目录读取活动文件夹
+        user_folders = []
+        if self.event_plans_dir and self.event_plans_dir.is_dir():
+            try:
+                user_folders = [d.name for d in self.event_plans_dir.iterdir() if d.is_dir()]
+            except Exception as e:
+                self.log_message_signal.emit(f"错误: 读取用户活动文件夹时出错: {e}")
+
+        # 从后端内置方案目录读取活动文件夹
+        backend_folders = list_directory(self.backend_event_plans_dir, filter_func=lambda p: os.path.isdir(p))
+
+        # 合并去重，用户目录优先级更高
+        all_folders = merge_lists(user_folders, backend_folders)
+
+        if not all_folders:
+            self.event_folder_combo.addItem("没有可用的活动")
             self.event_folder_combo.setEnabled(False)
-            return
-        try:
-            folders = sorted([d.name for d in self.event_plans_dir.iterdir() if d.is_dir()], reverse=True)
-            if not folders:
-                self.event_folder_combo.addItem("没有可用的活动")
-                self.event_folder_combo.setEnabled(False)
-            else:
-                self.event_folder_combo.addItems(folders)
-        except Exception as e:
-            self.log_message_signal.emit(f"错误: 读取活动文件夹时出错: {e}")
+        else:
+            self.event_folder_combo.addItems(sorted(all_folders, reverse=True))
 
     def _populate_event_tasks_combo(self, folder_name):
-        """根据文件夹名称，填充任务计划下拉菜单"""
+        """根据文件夹名称，填充任务计划下拉菜单（优先用户目录，其次后端内置目录）"""
         self.event_task_combo.clear()
         if not folder_name or "未找到" in folder_name or "没有可用" in folder_name:
             self.event_task_combo.setEnabled(False)
             return
-        if not self.event_plans_dir:
-            self.event_task_combo.addItem("事件方案根目录未设置")
-            self.event_task_combo.setEnabled(False)
-            return
 
-        task_dir = os.path.join(self.event_plans_dir, folder_name)
-        if not os.path.isdir(task_dir):
+        # 从用户方案目录查找任务文件
+        user_files = []
+        if self.event_plans_dir:
+            user_task_dir = os.path.join(self.event_plans_dir, folder_name)
+            if os.path.isdir(user_task_dir):
+                try:
+                    user_files = [f for f in os.listdir(user_task_dir) if f.endswith(('.yml', '.yaml'))]
+                except Exception as e:
+                    self.log_message_signal.emit(f"错误: 读取用户任务文件时出错: {e}")
+
+        # 从后端内置方案目录查找任务文件
+        backend_files = []
+        if self.backend_event_plans_dir:
+            backend_task_dir = os.path.join(self.backend_event_plans_dir, folder_name)
+            if os.path.isdir(backend_task_dir):
+                try:
+                    backend_files = [f for f in os.listdir(backend_task_dir) if f.endswith(('.yml', '.yaml'))]
+                except Exception as e:
+                    self.log_message_signal.emit(f"错误: 读取后端任务文件时出错: {e}")
+
+        # 合并去重，用户文件优先级更高
+        all_files = merge_lists(user_files, backend_files)
+
+        if not all_files:
             self.event_task_combo.addItem("无效的文件夹")
             self.event_task_combo.setEnabled(False)
             return
-        
-        try:
-            files = [f for f in os.listdir(task_dir) if f.endswith(('.yml', '.yaml'))]
-            if not files:
-                self.event_task_combo.addItem("未找到任务文件")
-                self.event_task_combo.setEnabled(False)
-            else:
-                plan_names = sorted([os.path.splitext(f)[0] for f in files])
-                self.event_task_combo.addItems(plan_names)
-                self.event_task_combo.setEnabled(True)
-        except Exception as e:
-            self.log_message_signal.emit(f"错误: 读取任务文件时出错: {e}")
-            self.event_task_combo.addItem("读取任务出错")
-            self.event_task_combo.setEnabled(False)
+
+        plan_names = sorted([os.path.splitext(f)[0] for f in all_files])
+        self.event_task_combo.addItems(plan_names)
+        self.event_task_combo.setEnabled(True)
 
     def _on_event_folder_changed(self, folder_name):
         """当活动文件夹选择变化时，保存新文件夹并级联更新和保存任务"""
@@ -255,7 +273,21 @@ class EventTab(BaseTaskTab):
         """从UI控件收集并返回要传递给脚本的参数列表"""
         event_folder = self.event_folder_combo.currentText()
         event_identifier = f"{event_folder[:4]}_{event_folder[4:]}"
-        plan_path = self.event_task_combo.currentText()
+        plan_name = self.event_task_combo.currentText()
+
+        # 查找方案文件的绝对路径（优先用户目录，其次后端内置目录）
+        plan_abs_path = None
+        for ext in ('.yml', '.yaml'):
+            if self.event_plans_dir:
+                candidate = os.path.join(self.event_plans_dir, event_folder, plan_name + ext)
+                if os.path.isfile(candidate):
+                    plan_abs_path = candidate
+                    break
+            if plan_abs_path is None and self.backend_event_plans_dir:
+                candidate = os.path.join(self.backend_event_plans_dir, event_folder, plan_name + ext)
+                if os.path.isfile(candidate):
+                    plan_abs_path = candidate
+                    break
 
         fleet_id = str(self.fleet_id_spin.value())
         battle_count_text = self.battle_count_input.text()
@@ -266,7 +298,7 @@ class EventTab(BaseTaskTab):
 
         return [
             event_identifier,
-            plan_path,
+            plan_abs_path or plan_name,
             fleet_id,
             battle_count_arg,
             reuse_daily_settings,

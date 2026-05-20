@@ -551,12 +551,12 @@ class MainWindow(QMainWindow):
                 self._is_updating = True
                 self._task_to_run_after_update = task_name
 
-                self.log_tab.append_log_message("------------ 正在从清华镜像源检查更新 ------------")
+                self.log_tab.append_log_message("------------ 正在从 GitHub 检查更新 ------------")
                 self._set_all_task_buttons_enabled(False, "正在检查更新...")
                 
                 command_args = [
-                    "-m", "pip", "install", "--upgrade", "autowsgr",
-                    "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"
+                    "-m", "pip", "install", "--upgrade",
+                    "git+https://github.com/YaoerWu/Auto-WSGR.git@classic"
                 ]
                 self.update_process.start(sys.executable, command_args)
             else:
