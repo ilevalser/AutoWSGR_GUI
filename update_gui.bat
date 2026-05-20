@@ -22,7 +22,7 @@ set "GITHUB_API=https://api.github.com"
 set "GITHUB_RAW=https://github.com/%REPO_OWNER%/%REPO_NAME%/archive/refs/heads/%BRANCH%.zip"
 
 :: Protected user files (will NOT be overwritten)
-set "PROTECTED_FILES=user_settings.yaml ui_configs.yaml resources\ship_name.yaml"
+set "PROTECTED_FILES=user_settings.yaml ui_configs.yaml resources\ship_name.yaml %~nx0"
 set "PROTECTED_DIRS=plans"
 
 :: =================================================================
@@ -43,6 +43,7 @@ echo Repository: https://github.com/%REPO_OWNER%/%REPO_NAME%
 echo Branch: %BRANCH%
 echo.
 echo The following user files are protected and will NOT be overwritten:
+echo   - %~nx0 (Updater itself)
 echo   - user_settings.yaml
 echo   - ui_configs.yaml
 echo   - resources\ship_name.yaml
@@ -94,54 +95,66 @@ echo ==  Step 2: Executing git pull                             ==
 echo =================================================================
 echo.
 
-:: Stash local changes to avoid conflicts
-echo [INFO] Stashing local changes...
-git stash --include-untracked
+:: 将 stash、pull 和 pop 整个流程全部打包进内存块
+(
+    echo [INFO] Stashing local changes...
+    git stash --include-untracked
+    set STASH_STATUS=!errorlevel!
 
-if %errorlevel% EQU 0 (
-    echo [INFO] Local changes stashed.
-) else (
-    echo [WARN] Failed to stash local changes (none to stash, continuing).
+    if !STASH_STATUS! EQU 0 (
+        echo [INFO] Local changes stashed.
+    ) else (
+        :: 注意这里的括号必须用 ^ 转义，否则会破坏内存块结构
+        echo [WARN] Failed to stash local changes ^(none to stash, continuing^).
+    )
+
+    echo.
+    echo [INFO] Fetching latest code from remote...
+    echo.
+
+    :: 备份当前脚本，强制防止它被更新
+    copy /y "%~f0" "%TEMP%\updater_backup.bat" >nul
+
+    git pull origin %BRANCH%
+    set PULL_STATUS=!errorlevel!
+
+    if !PULL_STATUS! EQU 0 (
+        echo.
+        echo [INFO] Git pull succeeded.
+        
+        echo [INFO] Restoring local changes...
+        git stash pop
+        set POP_STATUS=!errorlevel!
+        
+        if !POP_STATUS! EQU 0 (
+            echo [INFO] Local changes restored.
+        ) else (
+            echo [INFO] No local changes to restore.
+        )
+        
+        :: 无论 Git 怎么操作，最后都用刚才的备份把脚本强行盖回来
+        copy /y "%TEMP%\updater_backup.bat" "%~f0" >nul
+        goto :update_success
+        
+    ) else (
+        echo.
+        echo [ERROR] Git pull failed!
+        echo.
+        echo Possible causes:
+        echo   1. Network connection issue
+        echo   2. Conflicting local changes
+        echo.
+        echo Try manual steps:
+        echo   git status        # Check current status
+        echo   git stash         # Stash local changes
+        echo   git pull          # Fetch from remote
+        echo   git stash pop     # Restore local changes
+        
+        :: 失败也要把脚本还原
+        copy /y "%TEMP%\updater_backup.bat" "%~f0" >nul
+        goto :end
+    )
 )
-
-echo.
-echo [INFO] Fetching latest code from remote...
-echo.
-
-git pull origin %BRANCH%
-
-:: 检查 git pull 的结果
-if %errorlevel% EQU 0 goto :git_pull_success
-
-echo.
-echo [ERROR] Git pull failed!
-echo.
-echo Possible causes:
-echo   1. Network connection issue
-echo   2. Conflicting local changes
-echo.
-echo Try manual steps:
-echo   git status        # Check current status
-echo   git stash         # Stash local changes
-echo   git pull          # Fetch from remote
-echo   git stash pop     # Restore local changes
-goto :end
-
-:git_pull_success
-echo.
-echo [INFO] Git pull succeeded.
-
-:: Restore stashed changes (if any)
-echo [INFO] Restoring local changes...
-git stash pop
-if %errorlevel% EQU 0 (
-    echo [INFO] Local changes restored.
-) else (
-    echo [INFO] No local changes to restore.
-)
-
-goto :update_success
-
 
 :: =================================================================
 :: Method B: ZIP Download and Extract
@@ -158,15 +171,17 @@ echo.
 echo Download may take a while, please be patient...
 echo.
 
-:: Use PowerShell to download, extract, and overwrite files
+:: 使用向下兼容的 PowerShell 核心块，不再包含任何管道符(|)及高版本.NET组件
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
 $ErrorActionPreference = 'Stop'; ^
+$tempDir = $null; ^
 try { ^
     $repoOwner = '%REPO_OWNER%'; ^
     $repoName = '%REPO_NAME%'; ^
     $branch = '%BRANCH%'; ^
     $tempZip = [System.IO.Path]::GetTempFileName() + '.zip'; ^
-    $tempDir = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.IO.Guid]::NewGuid().ToString()); ^
+    $randNum = Get-Random -Minimum 100000 -Maximum 999999; ^
+    $tempDir = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), 'AutoWSGR_' + $randNum); ^
     $scriptDir = '%CD%'; ^
     ^
     Write-Host '[INFO] Downloading ZIP package...'; ^
@@ -177,15 +192,17 @@ try { ^
     [void](New-Item -ItemType Directory -Force -Path $tempDir); ^
     Expand-Archive -Path $tempZip -DestinationPath $tempDir; ^
     ^
-    $srcRoot = Get-ChildItem -Path $tempDir -Directory | Select-Object -First 1; ^
-    if (-not $srcRoot) { throw 'No directory found after extraction'; } ^
-    $srcPath = $srcRoot.FullName; ^
+    $dirs = Get-ChildItem -Path $tempDir -Directory; ^
+    if ($dirs.Count -eq 0) { throw 'No directory found after extraction'; } ^
+    $srcPath = $dirs[0].FullName; ^
     ^
     Write-Host '[INFO] Copying files...'; ^
-    $protectedFiles = @('user_settings.yaml', 'ui_configs.yaml', 'resources\ship_name.yaml'); ^
+    $thisScript = '%~nx0'; ^
+    $protectedFiles = @('user_settings.yaml', 'ui_configs.yaml', 'resources\ship_name.yaml', $thisScript); ^
     $protectedDirs = @('plans'); ^
     ^
-    Get-ChildItem -Path $srcPath -Recurse | ForEach-Object { ^
+    $allFiles = Get-ChildItem -Path $srcPath -Recurse; ^
+    foreach ($_ in $allFiles) { ^
         $relative = $_.FullName.Substring($srcPath.Length + 1); ^
         $skip = $false; ^
         ^
@@ -213,14 +230,14 @@ try { ^
     Write-Host ''; ^
     Write-Host '[INFO] File copy complete.'; ^
     ^
-    Remove-Item -Recurse -Force $tempDir -ErrorAction SilentlyContinue; ^
-    Remove-Item -Force $tempZip -ErrorAction SilentlyContinue; ^
+    if ($tempDir -and (Test-Path $tempDir)) { Remove-Item -Recurse -Force $tempDir -ErrorAction SilentlyContinue }; ^
+    if (Test-Path $tempZip) { Remove-Item -Force $tempZip -ErrorAction SilentlyContinue }; ^
     exit 0; ^
 } catch { ^
     Write-Host ''; ^
     Write-Host '[ERROR] Update failed: ' $_.Exception.Message; ^
-    Remove-Item -Recurse -Force $tempDir -ErrorAction SilentlyContinue; ^
-    Remove-Item -Force $tempZip -ErrorAction SilentlyContinue; ^
+    if ($tempDir -and (Test-Path $tempDir)) { Remove-Item -Recurse -Force $tempDir -ErrorAction SilentlyContinue }; ^
+    if (Test-Path $tempZip) { Remove-Item -Force $tempZip -ErrorAction SilentlyContinue }; ^
     exit 1; ^
 }
 
