@@ -5,7 +5,7 @@ from autowsgr.game.game_operation import set_support
 from autowsgr.game.get_game_info import get_loot_and_ship
 from constants import SETTINGS_FILE
 
-event_identifier = sys.argv[1] 
+event_identifier = sys.argv[1]
 plan_path = str(sys.argv[2])
 fleet_id = int(sys.argv[3])
 battle_count = int(sys.argv[4])
@@ -39,24 +39,37 @@ if module_name is None:
     timer.logger.error(f"无法加载指定的活动模块或类，已尝试新格式(event{new_name})和旧格式(event_{event_identifier})")
     sys.exit()
 
+stop_max_ship = False
 if reuse_daily_settings:
-    if timer.config.daily_automation.stop_max_loot:
+    if timer.config.daily_automation.stop_max_ship:
         get_loot_and_ship(timer)
-        
+
         if timer.got_ship_num == 500:
             timer.logger.info("已达出征上限，无法继续出征")
-            sys.exit()
+            stop_max_ship = True
         elif timer.got_ship_num + battle_count >= 500:
             battle_count = 500 - timer.got_ship_num
             timer.logger.info(f"调整出征次数为 {battle_count} 次")
 
-    if timer.config.daily_automation.auto_set_support:    
+    if timer.config.daily_automation.auto_set_support:
         set_support(timer, True)
 
-plan = EventFightPlanClass(
-    timer,
-    plan_path=plan_path,
-    fleet_id=fleet_id,
-)
+if not stop_max_ship:
+    plan = EventFightPlanClass(
+        timer,
+        plan_path=plan_path,
+        fleet_id=fleet_id,
+    )
 
-plan.run_for_times(battle_count,gap=bonus_check_interval)
+    plan.run_for_times(battle_count, gap=bonus_check_interval)
+
+if reuse_daily_settings:
+    timer.logger.info(f"因为设置了复用日常且活动出征任务数已满足/耗尽，转日常")
+    from autowsgr.scripts.daily_api import DailyOperation
+    from autowsgr.scripts.main import start_script
+    from constants import SETTINGS_FILE
+
+    timer = start_script(SETTINGS_FILE)
+
+    operation = DailyOperation(timer)
+    operation.run()
