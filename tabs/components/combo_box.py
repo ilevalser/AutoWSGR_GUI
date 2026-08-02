@@ -1,7 +1,9 @@
-from PySide6.QtWidgets import QPushButton, QListWidget, QListWidgetItem, QApplication, QAbstractItemView, QLabel, QHBoxLayout, QWidget
+from PySide6.QtWidgets import QPushButton, QListWidget, QListWidgetItem, QApplication, QAbstractItemView, QLabel, \
+    QHBoxLayout, QWidget
 from PySide6.QtCore import Qt, Signal, QSize, QPoint, QEvent
 from utils.icon_utils import get_icon_path, create_colored_pixmap
 from utils.ui_utils import natural_sort_key
+
 
 class CustomComboBox(QPushButton):
     currentIndexChanged = Signal(int)
@@ -12,7 +14,7 @@ class CustomComboBox(QPushButton):
         self._current_index = -1
         self._popup_visible = False
         self.setObjectName("DisplayButton")
-        button_layout = QHBoxLayout(self) # 布局直接设置在 self 上
+        button_layout = QHBoxLayout(self)  # 布局直接设置在 self 上
         button_layout.setContentsMargins(5, 0, 5, 0)
         self.text_label = QLabel("---")
         self.text_label.setObjectName("DisplayText")
@@ -69,12 +71,12 @@ class CustomComboBox(QPushButton):
 
     def _show_popup(self):
         if self._popup_visible:
-            self._hide_popup() # 如果已打开，再次点击则关闭
+            self._hide_popup()  # 如果已打开，再次点击则关闭
             return
         self._popup_visible = True
-        self.setProperty("state", "on") # 用于QSS，例如让边框持续高亮
+        self.setProperty("state", "on")  # 用于QSS，例如让边框持续高亮
         self.style().polish(self)
-        self.icon_label.setPixmap(self.arrow_pixmap_hover) # 打开时图标保持高亮
+        self.icon_label.setPixmap(self.arrow_pixmap_hover)  # 打开时图标保持高亮
         # 弹窗定位和显示逻辑
         item_height = self.list_widget.sizeHintForRow(0) if self.count() > 0 else 30
         visible_items = min(self.count(), 10)
@@ -85,7 +87,8 @@ class CustomComboBox(QPushButton):
         self.list_widget.setFixedWidth(self.width())
         self.list_widget.show()
         if self._current_index >= 0:
-            self.list_widget.scrollToItem(self.list_widget.item(self._current_index), QAbstractItemView.ScrollHint.PositionAtCenter)
+            self.list_widget.scrollToItem(self.list_widget.item(self._current_index),
+                                          QAbstractItemView.ScrollHint.PositionAtCenter)
         # 安装全局事件过滤器
         QApplication.instance().installEventFilter(self.global_event_filter)
 
@@ -103,7 +106,7 @@ class CustomComboBox(QPushButton):
             self.icon_label.setPixmap(self.arrow_pixmap_normal)
         # 移除全局事件过滤器
         QApplication.instance().removeEventFilter(self.global_event_filter)
-        
+
     def _on_item_selected(self, item: QListWidgetItem):
         row = self.list_widget.row(item)
         self.setCurrentIndex(row)
@@ -115,15 +118,31 @@ class CustomComboBox(QPushButton):
         if userData is not None: item.setData(Qt.ItemDataRole.UserRole, userData)
         self.list_widget.addItem(item)
         if self._current_index == -1 and self.count() > 0: self.setCurrentIndex(0)
-    def addItems(self, texts): [self.addItem(text) for text in sorted(texts, key=natural_sort_key)]
-    def count(self): return self.list_widget.count()
-    def currentIndex(self): return self._current_index
-    def currentText(self): return "" if self._current_index == -1 else self.text_label.text()
-    def currentData(self): return None if self._current_index == -1 else self.list_widget.item(self._current_index).data(Qt.ItemDataRole.UserRole)
+
+    def addItems(self, texts, isSort: bool = False):
+        if isSort:
+            [self.addItem(text) for text in sorted(texts, key=natural_sort_key)]
+        else:
+            [self.addItem(text) for text in texts]
+
+    def count(self):
+        return self.list_widget.count()
+
+    def currentIndex(self):
+        return self._current_index
+
+    def currentText(self):
+        return "" if self._current_index == -1 else self.text_label.text()
+
+    def currentData(self):
+        return None if self._current_index == -1 else self.list_widget.item(self._current_index).data(
+            Qt.ItemDataRole.UserRole)
+
     def clear(self):
         self.list_widget.clear()
         self.text_label.setText("---")
         self._current_index = -1
+
     def itemText(self, index):
         try:
             idx = int(index)
@@ -135,6 +154,7 @@ class CustomComboBox(QPushButton):
         if item:
             return item.text()
         return ""
+
     def setCurrentIndex(self, index):
         if not (0 <= index < self.count()): return
         self.list_widget.setCurrentRow(index)
@@ -144,26 +164,30 @@ class CustomComboBox(QPushButton):
             self.text_label.setText(item.text())
             self.currentIndexChanged.emit(index)
             self.currentTextChanged.emit(item.text())
+
     def setCurrentText(self, text):
         for i in range(self.count()):
             if self.list_widget.item(i).text() == text:
-                self.setCurrentIndex(i); return
+                self.setCurrentIndex(i);
+                return
 
     def findText(self, text, flags=Qt.MatchFlag.MatchExactly):
         """查找给定文本项的索引"""
         for i in range(self.count()):
             item_text = self.list_widget.item(i).text()
             if (flags & Qt.MatchFlag.MatchExactly and item_text == text) or \
-               (flags & Qt.MatchFlag.MatchStartsWith and item_text.startswith(text)) or \
-               (flags & Qt.MatchFlag.MatchEndsWith and item_text.endswith(text)) or \
-               (flags & Qt.MatchFlag.MatchContains and text in item_text) or \
-               (flags & Qt.MatchFlag.MatchCaseSensitive and item_text == text) or \
-               (not (flags & Qt.MatchFlag.MatchCaseSensitive) and item_text.lower() == text.lower()):
+                    (flags & Qt.MatchFlag.MatchStartsWith and item_text.startswith(text)) or \
+                    (flags & Qt.MatchFlag.MatchEndsWith and item_text.endswith(text)) or \
+                    (flags & Qt.MatchFlag.MatchContains and text in item_text) or \
+                    (flags & Qt.MatchFlag.MatchCaseSensitive and item_text == text) or \
+                    (not (flags & Qt.MatchFlag.MatchCaseSensitive) and item_text.lower() == text.lower()):
                 return i
         return -1
+
     # 用于居中文本
     def get_icon_width(self):
         return self.icon_label.width()
+
 
 # 一个辅助类，用于处理点击外部关闭弹窗的逻辑
 class GlobalEventFilter(QWidget):
@@ -172,7 +196,7 @@ class GlobalEventFilter(QWidget):
         self.button = button
         self.popup = popup
         self.hide_callback = hide_callback
-    
+
     def eventFilter(self, obj, event):
         # 只关心鼠标按键按下的事件
         if event.type() == QEvent.Type.MouseButtonPress:
