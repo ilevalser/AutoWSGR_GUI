@@ -19,6 +19,7 @@ from utils.ui_utils import create_form_layout, create_group, create_ok_cancel_bu
 from utils.config_utils import update_config_value, save_config
 from constants import BATTLE_TYPES
 
+
 class DailyTab(BaseTaskTab):
     """日常挂机设置选项卡"""
 
@@ -70,7 +71,7 @@ class DailyTab(BaseTaskTab):
         button_group = create_group(title=None, content=button_layout, margins=(15, 0, 15, 0))
         left_layout.addWidget(button_group)
         left_layout.addSpacing(10)
-        
+
         # 日常挂机相关设置项
         self.auto_expedition_cb = CustomCheckBox("自动重复远征")
         self.auto_gain_bonus_cb = CustomCheckBox("自动收取任务奖励")
@@ -97,7 +98,8 @@ class DailyTab(BaseTaskTab):
             {'widget': self.auto_exercise_cb, 'description': "自动进行演习"},
             {'widget': (QLabel("演习出征舰队:"), self.exercise_fleet_id_spin), 'description': "选择用于演习的舰队编号"},
             {'widget': self.auto_normal_fight_cb, 'description': "根据右侧任务列表自动出征"},
-            {'widget': (QLabel("快修消耗上限:"), self.quick_repair_limit_input), 'description': "设置自动使用快速修理的最大数量，0为无上限"},
+            {'widget': (QLabel("快修消耗上限:"), self.quick_repair_limit_input),
+             'description': "设置自动使用快速修理的最大数量，0为无上限"},
             {'widget': self.stop_max_ship_cb, 'description': "当捞取达到每日舰船掉落上限时停止挂机"},
             {'widget': self.stop_max_loot_cb, 'description': "当捞取达到每日胖次掉落上限时停止挂机"}
         ])
@@ -123,7 +125,8 @@ class DailyTab(BaseTaskTab):
         self.apply_preset_btn.setProperty("class", "ShortButton")
         self.save_preset_btn.setProperty("class", "ShortButton")
         self.delete_preset_btn.setProperty("class", "ShortButton")
-        preset_form_layout = create_form_layout([{'widget': (QLabel("选择任务:"), self.preset_task_combo), 'description': "点击应用后将覆盖当前任务列表"}])
+        preset_form_layout = create_form_layout(
+            [{'widget': (QLabel("选择任务:"), self.preset_task_combo), 'description': "点击应用后将覆盖当前任务列表"}])
 
         preset_buttons_layout = QHBoxLayout()
         preset_buttons_layout.addWidget(self.apply_preset_btn)
@@ -250,7 +253,7 @@ class DailyTab(BaseTaskTab):
             self.normal_plans_dir = os.path.join(plan_root, 'normal_fight')
         else:
             self.normal_plans_dir = None
-        
+
         self.task_file_combo.clear()
         self.task_file_combo.setEnabled(True)
 
@@ -278,7 +281,7 @@ class DailyTab(BaseTaskTab):
             self.task_file_combo.setEnabled(False)
         else:
             plan_names = sorted([os.path.splitext(f)[0] for f in all_files])
-            self.task_file_combo.addItems(plan_names)
+            self.task_file_combo.addItems(texts=plan_names, isSort=True)
 
     def _load_data_to_ui(self):
         """从配置数据加载初始值到 UI 控件"""
@@ -294,7 +297,7 @@ class DailyTab(BaseTaskTab):
         self.stop_max_loot_cb.setChecked(daily.get('stop_max_loot', False))
         self.battle_type_combo.setCurrentText(daily.get('battle_type', '困难战列'))
         self.exercise_fleet_id_spin.setValue(daily.get('exercise_fleet_id', 3))
-        
+
         # 如果值为 None（无上限），则在UI上显示为 '0'
         quick_repair_limit_val = daily.get('quick_repair_limit')
         display_text = '0' if quick_repair_limit_val is None else str(quick_repair_limit_val)
@@ -335,16 +338,15 @@ class DailyTab(BaseTaskTab):
         if text and text != "0":
             try:
                 num_value = int(text)
-                value_to_save = max(1, min(num_value, 999)) 
+                value_to_save = max(1, min(num_value, 999))
                 display_text = str(value_to_save)
             except (ValueError, TypeError):
                 value_to_save = None
                 display_text = "0"
-        
+
         if self.quick_repair_limit_input.text() != display_text:
             self.quick_repair_limit_input.setText(display_text)
         self._handle_value_change("daily_automation.quick_repair_limit", value_to_save)
-
 
     def eventFilter(self, watched, event):
         """事件过滤器，重置删除按钮的二次确认状态"""
@@ -356,8 +358,8 @@ class DailyTab(BaseTaskTab):
             if self.delete_preset_btn.isVisible() and self.delete_preset_confirm_manager.is_confirming():
                 clicked_widget = QApplication.widgetAt(event.globalPosition().toPoint())
                 is_on_delete_button = clicked_widget and (
-                    self.delete_preset_btn == clicked_widget or 
-                    self.delete_preset_btn.isAncestorOf(clicked_widget)
+                        self.delete_preset_btn == clicked_widget or
+                        self.delete_preset_btn.isAncestorOf(clicked_widget)
                 )
                 if not is_on_delete_button:
                     self.delete_preset_confirm_manager.reset_state()
@@ -371,7 +373,8 @@ class DailyTab(BaseTaskTab):
         # 校验现有任务列表
         available_plans = set()
         if self.normal_plans_dir and os.path.isdir(self.normal_plans_dir):
-            available_plans = {os.path.splitext(f)[0] for f in os.listdir(self.normal_plans_dir) if f.endswith(('.yml', '.yaml'))}
+            available_plans = {os.path.splitext(f)[0] for f in os.listdir(self.normal_plans_dir) if
+                               f.endswith(('.yml', '.yaml'))}
 
         daily_automation = self.settings_data.get('daily_automation', {})
         current_tasks = daily_automation.get('normal_fight_tasks', [])
@@ -385,7 +388,7 @@ class DailyTab(BaseTaskTab):
                 validated_tasks.append(task)
             elif task:
                 removed_task_names.append(str(task[0]))
-        
+
         # 如果有任务被移除，则更新配置和UI
         if removed_task_names:
             new_task_list = CommentedSeq(validated_tasks)
@@ -427,8 +430,8 @@ class DailyTab(BaseTaskTab):
             if self.edit_mode == 'add':
                 self._reset_to_view_mode()
                 # 让 list_manager 取消选择
-                self.list_manager.clear_selection() 
-                return # 避免重复逻辑
+                self.list_manager.clear_selection()
+                return  # 避免重复逻辑
             elif self.edit_task_module.isVisible() and self.edit_mode == 'edit':
                 self._load_task_data_to_editor(current_row)
         self._update_task_buttons_state()
@@ -556,7 +559,7 @@ class DailyTab(BaseTaskTab):
             saved_task_list = [list(task) for task in saved_task_data]
             if current_tasks_list == saved_task_list: return True_
         return False
-    
+
     def _save_configs(self):
         """保存 ui_configs.yaml"""
         try:
@@ -580,7 +583,7 @@ class DailyTab(BaseTaskTab):
         current_selection = self.preset_task_combo.currentText()
         self.preset_task_combo.clear()
         preset_map = self._get_preset_map()
-        
+
         if not preset_map:
             self.preset_task_combo.addItem("无可用预设")
             self.preset_task_combo.setEnabled(False)
@@ -593,11 +596,11 @@ class DailyTab(BaseTaskTab):
             if index != -1:
                 self.preset_task_combo.setCurrentIndex(index)
             else:
-                self.preset_task_combo.setCurrentIndex(-1) # 默认不选中
-        
+                self.preset_task_combo.setCurrentIndex(-1)  # 默认不选中
+
         self.preset_task_combo.blockSignals(False)
         self._on_preset_selection_changed(self.preset_task_combo.currentText())
-        self._update_task_buttons_state() # 确保按钮状态在加载后更新
+        self._update_task_buttons_state()  # 确保按钮状态在加载后更新
 
     def _get_preset_tasks(self, preset_name: str) -> list | None:
         """根据名称从 configs_data 获取预设任务列表的副本"""
@@ -613,7 +616,7 @@ class DailyTab(BaseTaskTab):
         preset_name = text
 
         if not preset_name or not self.preset_task_combo.isEnabled() or "无可用" in preset_name:
-            self.preset_task_combo.setToolTip("") # 清除
+            self.preset_task_combo.setToolTip("")  # 清除
             return
 
         tasks = self._get_preset_tasks(preset_name)
@@ -624,11 +627,11 @@ class DailyTab(BaseTaskTab):
         try:
             tooltip_lines = [f"预设「{preset_name}」内容:"]
             for task in tasks:
-                task_str = f"{list(task)}" 
+                task_str = f"{list(task)}"
                 tooltip_lines.append(task_str)
             tooltip_text = "\n".join(tooltip_lines)
             self.preset_task_combo.setToolTip(tooltip_text)
-            
+
         except Exception:
             self.preset_task_combo.setToolTip(f"无法预览预设 '{preset_name}'")
 
@@ -638,7 +641,7 @@ class DailyTab(BaseTaskTab):
         preset_name = self.preset_task_combo.currentText()
         if not preset_name or not self.preset_task_combo.isEnabled():
             return
-            
+
         tasks_to_apply = self._get_preset_tasks(preset_name)
         if tasks_to_apply is None: return
         # 为 settings_data 创建 CommentedSeq
@@ -661,20 +664,20 @@ class DailyTab(BaseTaskTab):
         existing_names = list(preset_map.keys())
 
         validator = PresetValidator(existing_names)
-        dialog = ValidationInputDialog(self, 
-                                     title="新建预设", 
-                                     prompt="请输入预设名称:", 
-                                     validator=validator)
+        dialog = ValidationInputDialog(self,
+                                       title="新建预设",
+                                       prompt="请输入预设名称:",
+                                       validator=validator)
         if dialog.exec() == QDialog.Accepted:
             new_name = dialog.get_confirmed_value()
             if new_name:
                 # 为 ui_configs.yaml 创建 CommentedSeq
-                tasks_copy = self.yaml_manager.seq() # 使用 .seq() 创建 CommentedSeq
+                tasks_copy = self.yaml_manager.seq()  # 使用 .seq() 创建 CommentedSeq
                 for task in current_tasks:
-                    inner_task = self.yaml_manager.seq(task) # 同样
+                    inner_task = self.yaml_manager.seq(task)  # 同样
                     inner_task.fa.set_flow_style()
                     tasks_copy.append(inner_task)
-                
+
                 preset_map[new_name] = tasks_copy
                 self._save_configs()
                 self._load_presets_to_combo()
@@ -689,11 +692,11 @@ class DailyTab(BaseTaskTab):
             return
 
         preset_map = self._get_preset_map()
-        
+
         if preset_name in preset_map:
             del preset_map[preset_name]
             self._save_configs()
-            self._load_presets_to_combo() # 会自动更新按钮状态
+            self._load_presets_to_combo()  # 会自动更新按钮状态
 
     def _delete_preset_pre_condition_check(self):
         """只有在选中了有效预设时才允许进入确认状态"""
