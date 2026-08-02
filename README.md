@@ -21,6 +21,7 @@ UI图标来自[`css.gg`](https://github.com/astrit/css.gg)和[`Flowbite Icons`](
 # 使用说明
 
 需搭配后端[`AutoWSGR`](https://github.com/YaoerWu/Auto-WSGR)使用。
+
 步骤1： 跑通AutoWSGR
 
 步骤2：AutoWSGR中的autowsgr文件夹拖入本程序
